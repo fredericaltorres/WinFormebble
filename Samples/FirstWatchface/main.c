@@ -5,24 +5,6 @@
 #include <pebble_fonts.h>
 #include "WinFormebble.h"
 #include "jsCom.h"
-    
-#include <stdarg.h>
-
-int myfunc(int count, ...)
-{
-   va_list list;
-   int j = 0;
-
-   va_start(list, count); 
-   for(j=0; j<count; j++)
-   {
-     printf("%d", va_arg(list, int));
-   }
-
-   va_end(list);
-
-   return count;
-}
 
 // Api data returned from JavaScript World to C world
 // Dictionary propertues used in communication with Pebble iOS App
