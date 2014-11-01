@@ -1,8 +1,13 @@
-
+#include <pebble.h>
+    
 // Util Defines
 
 // Format a char array charBuffer. charBuffer must be already allocated
-#define StringFormat(charBuffer, format, value) snprintf(charBuffer, sizeof(charBuffer), format, value)
+//#define StringFormat(charBuffer, format, value) snprintf(charBuffer, sizeof(charBuffer), format, value)
+    
+char *StringFormatTime(struct tm *tick_time, char * format, char * buffer, int bufferSize);
+char *StringFormatInt(int value, char * format, char * buffer, int bufferSize);
+char *StringFormat(char * value, char * format, char * buffer, int bufferSize);
     
 // vector.h
 // http://www.happybearsoftware.com/implementing-a-dynamic-array.html

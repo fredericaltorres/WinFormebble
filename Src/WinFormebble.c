@@ -67,6 +67,10 @@ GFont Font_Load(uint32_t resourceFontId) {
     return fonts_load_custom_font(resource_get_handle(resourceFontId));
 }
 
+GFont Font_LoadSystem(const char *font_key) {
+    
+    return fonts_get_system_font(font_key);    
+}
 
 /*
  * Buttons Handlers
@@ -109,7 +113,7 @@ void Form_RegisterButtonHandlers(Form *form, ClickHandler selectClickHandler, Cl
  *     Label Methods
  */    
 
-TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, GTextAlignment alignment) {
+TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, GTextAlignment alignment, const char *fontName) {
     
     TextLayer *label;
     label = text_layer_create(frame);
@@ -122,6 +126,10 @@ TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, GTextAlig
         text_layer_set_text_color(label, GColorBlack);                
     }    
     text_layer_set_text_alignment(label, alignment);
+    
+    if(fontName != NULL) {
+        Label_SetSystemFont(label, fontName);
+    }    
     return label;
 }
 /**
@@ -139,6 +147,11 @@ void Label_Destructor(TextLayer * label) {
 void Label_SetFont(TextLayer * label, GFont font) {
     
     text_layer_set_font(label, font);
+}
+
+void Label_SetSystemFont(TextLayer * label, const char *fontName) {
+    
+    text_layer_set_font(label, Font_LoadSystem(fontName));
 }
 
 /*
@@ -188,10 +201,10 @@ void __Menu__select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
         __Menu__MenuLayerSelectCallback(menu_layer, cell_index, callback_context);
     }
 }
-MenuLayer * Menu_New(Form * form, MenuLayerSelectCallback menuLayerSelectCallback) {
+MenuLayer * Menu_New(Form * form/*, MenuLayerSelectCallback menuLayerSelectCallback*/) {
     
     _Menu__Counter                  = 0;
-    __Menu__MenuLayerSelectCallback = menuLayerSelectCallback;
+    //__Menu__MenuLayerSelectCallback = menuLayerSelectCallback;
     MenuLayer * menu_layer          = menu_layer_create(GRect(0, 0, 144, 168 - 16));
     
     menu_layer_set_click_config_onto_window(menu_layer, form->WindowHandle);

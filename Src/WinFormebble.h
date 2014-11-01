@@ -19,8 +19,6 @@
 typedef struct {
     
     Window    *WindowHandle;
-    
-    GFont     Font;
     Vector    _vectorLabels;
 } Form;
 
@@ -32,6 +30,7 @@ void Form_RegisterButtonHandlers(Form *form, ClickHandler selectClickHandler, Cl
 // Font -----------------------------------------------------------
 
 GFont Font_Load(uint32_t resourceFontId);
+GFont Font_LoadSystem(const char *font_key);
 
 // Label -----------------------------------------------------------
 
@@ -40,10 +39,11 @@ typedef enum {
     WhiteBackground = 1,  
 } BackGroundColorType;
 
-TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, GTextAlignment alignment);
+TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, GTextAlignment alignment, const char *fontName);
 void Label_SetText(TextLayer * label, const char * text);
 void Label_Destructor(TextLayer * label);
 void Label_SetFont(TextLayer * label, GFont font);
+void Label_SetSystemFont(TextLayer * label, const char *fontName);
 
 
 /*

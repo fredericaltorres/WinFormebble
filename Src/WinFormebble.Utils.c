@@ -1,5 +1,6 @@
 #include <pebble.h>
 #include "WinFormebble.Utils.h"
+#include <stdarg.h>
 
 // vector.c
 // http://www.happybearsoftware.com/implementing-a-dynamic-array.html
@@ -35,4 +36,38 @@ void vector_double_capacity_if_full(Vector *vector) {
 }
 void vector_free(Vector *vector) {
   free(vector->data);
+}
+
+/*
+ * String Format Methods
+ */
+char *StringFormatInt(int value, char * format, char * buffer, int bufferSize) {
+    
+    snprintf(buffer, bufferSize, format, value);
+    return buffer;
+}
+
+char *StringFormat(char * value, char * format, char * buffer, int bufferSize) {
+    
+    snprintf(buffer, bufferSize, format, value);
+    return buffer;
+}
+/*
+char *StringFormat2(char * format, char * buffer, int bufferSize, ...) {
+     va_list ap;
+    va_start(ap, n args);
+    snprintf(buffer, bufferSize, format, ap); 
+    va_end(ap);
+    return buffer;
+   
+}*/
+  
+  
+/*
+ * http://www.cplusplus.com/reference/ctime/strftime/
+ */
+char *StringFormatTime(struct tm *tick_time, char * format, char * buffer, int bufferSize) {
+
+    strftime(buffer, bufferSize, format, tick_time); // http://www.cplusplus.com/reference/ctime/strftime/
+    return buffer;
 }
