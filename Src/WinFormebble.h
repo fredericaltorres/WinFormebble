@@ -1,6 +1,10 @@
 /*
- * WinFormebble
- * Wrapper around the pebble API, more friendly to C#, WinForm and Windows developers.
+ * WinFormebble Library
+ * A C# and Winform friendly library for the developing for the Pebble watch
+ *
+ * (C) Torres Frederic 2014
+ *
+ * Licence: MIT
  */
 #include <pebble.h>
 #include "WinFormebble.Utils.h"  
@@ -51,8 +55,9 @@ void Label_SetSystemFont(TextLayer * label, const char *fontName);
  */    
 void Timer_Register(TimeUnits tick_units, TickHandler handler);
 
-void Menu_Add(char * entry);
+
 MenuLayer * Menu_New(Form *form);
+void Menu_Add(char * entry);
 void Menu_Destructor(Menu menu);
 
 /*

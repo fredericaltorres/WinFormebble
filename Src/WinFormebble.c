@@ -1,6 +1,10 @@
 /*
- * WinFormebble
- * Wrapper around the pebble API, more friendly to C# and Win Form developers
+ * WinFormebble Library
+ * A C# and Winform friendly library for the developing for the Pebble watch
+ *
+ * (C) Torres Frederic 2014
+ *
+ * Licence: MIT
  */
 #include <pebble.h>
 #include "WinFormebble.h"
