@@ -1,6 +1,21 @@
 /*
- * Pebble Watchface
+ * FredTime - a Pebble Watchface
+ * 
+ * (C) Torres Frederic 2014
+ *
+ * Display the following:
+ * - Day in the week, 
+ * - Month, 
+ * - Day of the month
+ * - Location based on MapQuest web service
+ * - Temperature and weather condition based on web service openweathermap
+ *
+ * Use the library WinFormebble (https://github.com/fredericaltorres/WinFormebble)
+ *
+ * Licence: MIT
+ *
  */
+#inclu
 #include <pebble.h>
 #include <pebble_fonts.h>
 #include "WinFormebble.h"
