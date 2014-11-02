@@ -28,11 +28,11 @@ Form mainForm;
 
     event mainForm_Load(Window *window) {
         
-        lblDate = Label_New(GRect(0, 0, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
+        lblDate = Label_New(GRect(0, 8, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblDate, NOT_INITIALIZED);
         Form_AddLabel(&mainForm, lblDate);
         
-        lblMonth = Label_New(GRect(0, 28, 144, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
+        lblMonth = Label_New(GRect(0, 33, 144, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblMonth, NOT_INITIALIZED);
         Form_AddLabel(&mainForm, lblMonth);
         
@@ -55,8 +55,8 @@ Form mainForm;
         static char dateBuffer [DEFAULT_STRING_BUFFER_SIZE];
         static char monthBuffer[DEFAULT_STRING_BUFFER_SIZE];
             
-        Label_SetText(lblTime,  __StringFormatTime(tick_time, clock_is_24h_style() ? "%H:%M" : "%I:%M", timeBuffer, 16));        
-        Label_SetText(lblDate,  __StringFormatTime(tick_time, "%A", dateBuffer, 16));                
+        Label_SetText(lblTime,  StringFormatTime(tick_time, clock_is_24h_style() ? "%H:%M" : "%I:%M", timeBuffer));
+        Label_SetText(lblDate,  StringFormatTime(tick_time, "%A", dateBuffer));
         Label_SetText(lblMonth, StringFormatTime(tick_time, "%B %d", monthBuffer));
     }
     void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
@@ -81,7 +81,7 @@ Form mainForm;
             }
             t = dict_read_next(iterator);
         }
-        StringFormat(AsBuffer(weather_layer_buffer), "(%s, %s)", temperature_buffer, conditions_buffer);
+        StringFormat(AsBuffer(weather_layer_buffer), "%s - %s", temperature_buffer, conditions_buffer);
         Label_SetText(lblWeather, weather_layer_buffer);
     }
 
