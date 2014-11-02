@@ -7,16 +7,20 @@
 #include "jsCom.h"
 
 // Api data returned from JavaScript World to C world
-// Dictionary propertues used in communication with Pebble iOS App
-#define KEY_TEMPERATURE 0
+// Dictionary properties used in communication with Pebble iOS App
+// Metadata defined in project settings    
+#define KEY_REQUEST_ID 0
+        #define KEY_REQUEST_ID_GET_WEATHER 0
+        #define KEY_REQUEST_ID_GET_LOCATION 1   
 #define KEY_CONDITIONS 1
+#define KEY_LOCATION 2
+#define KEY_TEMPERATURE 3
 
-// Api Request from the C world to JavaScript World    
-#define JS_API_GET_WHEATHER 0
-
+// Strings and messages
 #define WATCH_DIGIT_BUFFER "00:00"
 #define NOT_INITIALIZED "..."
 #define LOADING "Loading..."
+    
 #define DEFAULT_STRING_BUFFER_SIZE 16    
     
 Form mainForm;
@@ -25,6 +29,7 @@ Form mainForm;
     Label lblWeather;
     Label lblDate;
     Label lblMonth;
+    Label lblLocation;
 
     event mainForm_Load(Window *window) {
         
@@ -36,13 +41,17 @@ Form mainForm;
         Label_SetText(lblMonth, NOT_INITIALIZED);
         Form_AddLabel(&mainForm, lblMonth);
         
-        lblTime = Label_New(GRect(5, 60, 139, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_BOLD_SUBSET_49);
+        lblTime = Label_New(GRect(5, 55, 139, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_BOLD_SUBSET_49);
         Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         Form_AddLabel(&mainForm, lblTime);
         
-        lblWeather = Label_New(GRect(0, 130, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
+        lblWeather = Label_New(GRect(0, 110, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblWeather, LOADING);
         Form_AddLabel(&mainForm, lblWeather);
+        
+        lblLocation = Label_New(GRect(0, 134, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
+        Label_SetText(lblLocation, NOT_INITIALIZED);
+        Form_AddLabel(&mainForm, lblLocation);
     }
     event mainForm_Unload(Window *window) {
         
@@ -61,28 +70,38 @@ Form mainForm;
     }
     void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
         
-        mainForm_UpdateTime();
+        mainForm_UpdateTime();        
         if(tick_time->tm_min % 20 == 0) { // Get weather update 20 minutes
-            jsCom_SendMessage(JS_API_GET_WHEATHER);
+            jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);
         }
     }
     void  mainForm_InboxReceivedCallback(DictionaryIterator *iterator, void *context) {
       
-        static char temperature_buffer[8]; // Store incoming information
-        static char conditions_buffer[32];
-        static char weather_layer_buffer[32];
+        static char temperature[DEFAULT_STRING_BUFFER_SIZE]; // Must be static
+        static char conditions [DEFAULT_STRING_BUFFER_SIZE];
+        static char weather    [DEFAULT_STRING_BUFFER_SIZE];
+        static char location   [DEFAULT_STRING_BUFFER_SIZE];
+        int requestId = -1;
     
-        Tuple * t = dict_read_first(iterator); // Read first item
+        Tuple * t = dict_read_first(iterator);
         while(t != NULL) {
             switch(t->key) {
-                case KEY_TEMPERATURE: StringFormatInt(t->value->int32, "%dC", temperature_buffer); break;            
-                case KEY_CONDITIONS : StringFormatString(t->value->cstring, "%s", conditions_buffer); break;
+                case KEY_REQUEST_ID : requestId = t->value->int32;                            break;
+                case KEY_TEMPERATURE: StringFormatInt(t->value->int32, "%dC", temperature);   break;            
+                case KEY_CONDITIONS : StringFormatString(t->value->cstring, "%s", conditions);break;
+                case KEY_LOCATION   : StringFormatString(t->value->cstring, "%s", location);  break;
                 default             : APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key); break;
             }
             t = dict_read_next(iterator);
         }
-        StringFormat(AsBuffer(weather_layer_buffer), "%s - %s", temperature_buffer, conditions_buffer);
-        Label_SetText(lblWeather, weather_layer_buffer);
+        StringFormat(AsBuffer(weather), "%s - %s", temperature, conditions);
+        Label_SetText(lblWeather, weather);
+        Label_SetText(lblLocation, location);
+        
+        // If we just received the response for Get Weather, not initiate Get Location
+        if(requestId == KEY_REQUEST_ID_GET_WEATHER) {
+            jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
+        }
     }
 
 ////////////////////////////////////////////////////////////////////
@@ -93,13 +112,15 @@ static void init() {
        
     Form_New(&mainForm, mainForm_Load, mainForm_Unload);
     mainForm_UpdateTime();
-    Timer_Register(MINUTE_UNIT, mainForm_EveryMinuteTimer);
     jsCom_Initialize(mainForm_InboxReceivedCallback);
-    
-    Trace_TraceError("HELLO WORLDISH %d", 1);
-    Trace_TraceInformation("HELLO WORLDISH %d", 2);
-    Trace_TraceWarning("HELLO WORLDISH %d", 3);
-    Trace_TraceDebug("HELLO WORLDISH %d", 4);
+    Timer_Register(MINUTE_UNIT, mainForm_EveryMinuteTimer);
+
+    //Trace_TraceError("HELLO WORLDISH %d", 1);
+    //Trace_TraceInformation("HELLO WORLDISH %d", 2);
+    //Trace_TraceWarning("HELLO WORLDISH %d", 3);
+    //Trace_TraceDebug("HELLO WORLDISH %d", 4);    
+    //jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);    
+    jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);
 }
 
 static void deinit() {
@@ -108,7 +129,8 @@ static void deinit() {
 }
 
 int main(void) { 
-  init();
-  app_event_loop();
-  deinit();
+    
+    init();
+    app_event_loop();
+    deinit();
 }

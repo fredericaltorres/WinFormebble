@@ -10,13 +10,13 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     }
 }
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
 }
 static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
 }
 static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+    //APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
 
 void jsCom_Initialize(AppMessageInboxReceived received_callback) {
@@ -36,8 +36,8 @@ void jsCom_SendMessage(uint8_t key) {
     
      jsCom_SendIntMessage(key, 0);
 }
-void jsCom_SendIntMessage(uint8_t key, uint8_t cmd)    
-{
+void jsCom_SendIntMessage(uint8_t key, uint8_t cmd) {
+    
 	DictionaryIterator *iter;
  	app_message_outbox_begin(&iter);
  	
@@ -46,3 +46,24 @@ void jsCom_SendIntMessage(uint8_t key, uint8_t cmd)
  	
  	app_message_outbox_send();
 }
+bool jsCom_SendStringMessage(int key, char *text) {
+    
+    if ((key == -1) && (text == NULL)) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "no data to send");
+        // well, the "nothing" that was sent to us was queued, anyway ...
+        return true;
+    }
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    if (iter == NULL) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "null iter");
+        return false;
+    }
+    Tuplet tuple = (text == NULL) ? TupletInteger(key, 1) : TupletCString(key, text);
+    dict_write_tuplet(iter, &tuple);
+    dict_write_end(iter);
+    
+    app_message_outbox_send();
+    return true;
+}
+

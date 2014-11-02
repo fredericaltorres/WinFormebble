@@ -3,3 +3,4 @@
 void jsCom_Initialize();
 void jsCom_SendMessage(uint8_t key);
 void jsCom_SendIntMessage(uint8_t key, uint8_t cmd);
+bool jsCom_SendStringMessage(int key, char *text);
