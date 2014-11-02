@@ -15,7 +15,6 @@
  * Licence: MIT
  *
  */
-#inclu
 #include <pebble.h>
 #include <pebble_fonts.h>
 #include "WinFormebble.h"
@@ -30,6 +29,11 @@
 #define KEY_CONDITIONS 1
 #define KEY_LOCATION 2
 #define KEY_TEMPERATURE 3
+#define KEY_VIBRATE 4 // 1 true 0 false
+    
+// Data Refresh Rate
+#define WEATHER_REFRESH_RATE  50 // minutes    
+#define LOCATION_REFRESH_RATE 12 // minutes    
 
 // Strings and messages
 #define WATCH_DIGIT_BUFFER "00:00"
@@ -45,6 +49,8 @@ Form mainForm;
     Label lblDate;
     Label lblMonth;
     Label lblLocation;
+
+    static char _currentHour[3];
 
     event mainForm_Load(Window *window) {
         
@@ -78,6 +84,14 @@ Form mainForm;
         static char timeBuffer [DEFAULT_STRING_BUFFER_SIZE];
         static char dateBuffer [DEFAULT_STRING_BUFFER_SIZE];
         static char monthBuffer[DEFAULT_STRING_BUFFER_SIZE];
+        char newHour[3];
+        
+        // Vibrate a t the beginning of each hour
+        strcpy(newHour, StringFormatTime(tick_time, "%H", timeBuffer));
+        if(strcmp(_currentHour, newHour) != 0) {
+            strcpy(_currentHour, newHour);
+            vibes_short_pulse();
+        }
             
         Label_SetText(lblTime,  StringFormatTime(tick_time, clock_is_24h_style() ? "%H:%M" : "%I:%M", timeBuffer));
         Label_SetText(lblDate,  StringFormatTime(tick_time, "%A", dateBuffer));
@@ -85,9 +99,15 @@ Form mainForm;
     }
     void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
         
-        mainForm_UpdateTime();        
-        if(tick_time->tm_min % 20 == 0) { // Get weather update 20 minutes
+        mainForm_UpdateTime();
+        
+        if(tick_time->tm_min % WEATHER_REFRESH_RATE == 0) { // Get weather update every 50 minutes (and will also get the location)
+            
             jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);
+        }
+        else if(tick_time->tm_min % LOCATION_REFRESH_RATE == 0) { // Get location every 12 minutes when we are not asking for weather
+            
+            jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
         }
     }
     void  mainForm_InboxReceivedCallback(DictionaryIterator *iterator, void *context) {
@@ -97,14 +117,18 @@ Form mainForm;
         static char weather    [DEFAULT_STRING_BUFFER_SIZE];
         static char location   [DEFAULT_STRING_BUFFER_SIZE];
         int requestId = -1;
+        int vibrate = 0;
     
         Tuple * t = dict_read_first(iterator);
         while(t != NULL) {
+            
             switch(t->key) {
+                
                 case KEY_REQUEST_ID : requestId = t->value->int32;                            break;
                 case KEY_TEMPERATURE: StringFormatInt(t->value->int32, "%dC", temperature);   break;            
                 case KEY_CONDITIONS : StringFormatString(t->value->cstring, "%s", conditions);break;
                 case KEY_LOCATION   : StringFormatString(t->value->cstring, "%s", location);  break;
+                case KEY_VIBRATE    : vibrate = t->value->int32;                              break;
                 default             : APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key); break;
             }
             t = dict_read_next(iterator);
@@ -113,10 +137,15 @@ Form mainForm;
         Label_SetText(lblWeather, weather);
         Label_SetText(lblLocation, location);
         
+        if(vibrate) { // Api requested to vibrate to notify something to the user
+             vibes_short_pulse();
+        }
+        
         // If we just received the response for Get Weather, not initiate Get Location
         if(requestId == KEY_REQUEST_ID_GET_WEATHER) {
             jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
         }
+        
     }
 
 ////////////////////////////////////////////////////////////////////
