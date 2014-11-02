@@ -73,45 +73,30 @@ function getWeatherFromGpsPos(pos) {
             var json        = JSON.parse(responseText);           
             var temperature = kelvinToCelsius(json.main.temp); // Temperature
             var conditions  = json.weather[0].main; // Conditions
-
             var dictionary  = { 
                 KEY_REQUEST_ID : REQUEST_ID_GET_WEATHER,
                 KEY_TEMPERATURE: temperature,
                 KEY_CONDITIONS : conditions,
             };
             sendMessageToWatch(dictionary, "getWeatherFromGpsPos");
-            /*
-            Trace("Info:"+JSON.stringify(dictionary));                     
-            Pebble.sendAppMessage(
-                dictionary,
-                function(e) { },
-                function(e) { console.log("getWeatherFromGpsPos() - Error sending weather info to Pebble!"); }
-            );*/
         }      
     );
 }
 
 function getAddressFromGpsPos(pos) {
     
-    getCurrentAddress(
-        pos.coords.latitude, 
-        pos.coords.longitude,
-        function(address) {
-
-            var dictionary  = { 
+    var url = MAPQUEST_REVERSE_LOCATION_URL.format(FredMapQuestKey, pos.coords.latitude, pos.coords.longitude);        
+    httpGet(url, 
+        function(responseText) {
+            var o = JSON.parse(responseText);
+            var l = o.results[0].locations[0];
+             var dictionary  = { 
                 KEY_REQUEST_ID : REQUEST_ID_GET_LOCATION,                
-                KEY_LOCATION   : address
+                KEY_LOCATION   : "{0}, {1}, {2}".format(l.adminArea5, l.adminArea3, l.adminArea1)
             };
-            sendMessageToWatch(dictionary, "getAddressFromGpsPos");
-            /*
-            Trace("Info:"+JSON.stringify(dictionary)); 
-            Pebble.sendAppMessage( // Send to Pebble
-                dictionary,
-                function(e) { },
-                function(e) { console.log("getAddressFromGpsPos() - Error sending weather info to Pebble!"); }
-            );*/
+            sendMessageToWatch(dictionary, "getAddressFromGpsPos");  
         }
-    );      
+    ); 
 }
 
 function getWeather() {
