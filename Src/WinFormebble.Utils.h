@@ -2,13 +2,19 @@
     
 // Util Defines
 
-// Format a char array charBuffer. charBuffer must be already allocated
-//#define StringFormat(charBuffer, format, value) snprintf(charBuffer, sizeof(charBuffer), format, value)
+#define StringFormat snprintf
+#define AsBuffer(buffer) buffer, sizeof(buffer)
+//snprintf(weather_layer_buffer, sizeof(weather_layer_buffer), "(%s, %s)", temperature_buffer, conditions_buffer);        
     
-char *StringFormatTime(struct tm *tick_time, char * format, char * buffer, int bufferSize);
-char *StringFormatInt(int value, char * format, char * buffer, int bufferSize);
-char *StringFormat(char * value, char * format, char * buffer, int bufferSize);
-    
+#define StringFormatTime(tick_time, format, buffer) __StringFormatTime(tick_time, format, buffer, sizeof(buffer))    
+char *__StringFormatTime(struct tm * tick_time, char * format, char * buffer, int bufferSize);
+
+#define StringFormatInt(value, format, buffer) __StringFormatInt(value, format, buffer, sizeof(buffer))
+char *__StringFormatInt(int value, char * format, char * buffer, int bufferSize);
+
+#define StringFormatString(value, format, buffer) __StringFormatString(value, format, buffer, sizeof(buffer))
+char *__StringFormatString(char * value, char * format, char * buffer, int bufferSize);
+
 // vector.h
 // http://www.happybearsoftware.com/implementing-a-dynamic-array.html
 // The implement a indexed list of integer    

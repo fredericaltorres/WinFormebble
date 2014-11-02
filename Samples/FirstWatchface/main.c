@@ -14,9 +14,10 @@
 // Api Request from the C world to JavaScript World    
 #define JS_API_GET_WHEATHER 0
 
-#define WATCH_DIGIT_BUFFER  "00:00"
+#define WATCH_DIGIT_BUFFER "00:00"
 #define NOT_INITIALIZED "..."
 #define LOADING "Loading..."
+#define DEFAULT_STRING_BUFFER_SIZE 16    
     
 Form mainForm;
 
@@ -45,19 +46,18 @@ Form mainForm;
     }
     event mainForm_Unload(Window *window) {
         
-    }
-  
+    }  
     void mainForm_UpdateTime() {    
         
         time_t temp             = time(NULL);  // Get a tm structure
         struct tm *tick_time    = localtime(&temp);
-        static char timeBuffer [06];
-        static char dateBuffer [16];
-        static char monthBuffer[16];
+        static char timeBuffer [DEFAULT_STRING_BUFFER_SIZE];
+        static char dateBuffer [DEFAULT_STRING_BUFFER_SIZE];
+        static char monthBuffer[DEFAULT_STRING_BUFFER_SIZE];
             
-        Label_SetText(lblTime, StringFormatTime(tick_time, clock_is_24h_style() ? "%H:%M" : "%I:%M", timeBuffer, sizeof(timeBuffer)));        
-        Label_SetText(lblDate, StringFormatTime(tick_time, "%A", dateBuffer, sizeof(dateBuffer)));                
-        Label_SetText(lblMonth, StringFormatTime(tick_time, "%B %d", monthBuffer, sizeof(monthBuffer)));
+        Label_SetText(lblTime,  __StringFormatTime(tick_time, clock_is_24h_style() ? "%H:%M" : "%I:%M", timeBuffer, 16));        
+        Label_SetText(lblDate,  __StringFormatTime(tick_time, "%A", dateBuffer, 16));                
+        Label_SetText(lblMonth, StringFormatTime(tick_time, "%B %d", monthBuffer));
     }
     void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
         
@@ -72,17 +72,16 @@ Form mainForm;
         static char conditions_buffer[32];
         static char weather_layer_buffer[32];
     
-        Tuple *t = dict_read_first(iterator); // Read first item
+        Tuple * t = dict_read_first(iterator); // Read first item
         while(t != NULL) {
             switch(t->key) {
-                case KEY_TEMPERATURE: StringFormatInt((int)t->value->int32, "%dC", temperature_buffer, sizeof(temperature_buffer)); break;            
-                case KEY_CONDITIONS : StringFormat(t->value->cstring, "%s", conditions_buffer, sizeof(conditions_buffer)); break;
-                
+                case KEY_TEMPERATURE: StringFormatInt(t->value->int32, "%dC", temperature_buffer); break;            
+                case KEY_CONDITIONS : StringFormatString(t->value->cstring, "%s", conditions_buffer); break;
                 default             : APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key); break;
             }
             t = dict_read_next(iterator);
         }
-        snprintf(weather_layer_buffer, sizeof(weather_layer_buffer), "(%s, %s)", temperature_buffer, conditions_buffer);
+        StringFormat(AsBuffer(weather_layer_buffer), "(%s, %s)", temperature_buffer, conditions_buffer);
         Label_SetText(lblWeather, weather_layer_buffer);
     }
 
