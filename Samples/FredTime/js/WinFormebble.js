@@ -1,0 +1,36 @@
+var GEOLOCATION_TIMEOUT     = 15000;
+var GEOLOCATION_MAXIMUM_AGE = 60000;
+
+var Trace = function(s) {
+    var timeStamp = (new Date()).toLocaleTimeString();
+    console.log(timeStamp+' '+s);
+};
+
+var xhrRequest = function (url, type, callback) {
+
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function () {
+        callback(this.responseText);
+    };
+    Trace("http call {0} {1}".format(type, url));
+    xhr.open(type, url);
+    xhr.send();
+};
+
+var httpGet = function (url, callback) {
+    xhrRequest(url, 'GET', callback);
+};
+
+var kelvinToCelsius = function(v) {
+    return Math.round(v) - 273.15;
+};
+
+var sendMessageToWatch = function(dictionary, method) {
+
+    Trace("{0}sendMessageToWatch({1})".format(method ? method+'().' : "", JSON.stringify(dictionary))); 
+    Pebble.sendAppMessage( // Send to Pebble
+        dictionary,
+        function(e) { },
+        function(e) { console.log("Error sending dictionary info to Pebble! method:"+method); }
+    );
+};

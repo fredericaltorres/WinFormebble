@@ -30,6 +30,7 @@
 #define KEY_LOCATION 2
 #define KEY_TEMPERATURE 3
 #define KEY_VIBRATE 4 // 1 true 0 false
+#define KEY_STREET 5
     
 // Data Refresh Rate
 #define WEATHER_REFRESH_RATE  50 // minutes    
@@ -51,8 +52,16 @@ Form mainForm;
     Label lblLocation;
 
     static char _currentHour[3];
+    static char _street[DEFAULT_STRING_BUFFER_SIZE];
+    static char _address[DEFAULT_STRING_BUFFER_SIZE];
+    static int _apiCount = 0;
 
     event mainForm_Load(Window *window) {
+        
+        Trace_TraceDebug("-- mainForm_Load --");
+        
+        strcpy(_street, NOT_INITIALIZED);
+        strcpy(_address, NOT_INITIALIZED);
         
         lblDate = Label_New(GRect(0, 8, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblDate, NOT_INITIALIZED);
@@ -76,8 +85,11 @@ Form mainForm;
     }
     event mainForm_Unload(Window *window) {
         
+       Trace_TraceDebug("-- mainForm_Load --"); 
     }  
     void mainForm_UpdateTime() {    
+        
+        Trace_TraceDebug("-- mainForm_UpdateTime --");
         
         time_t temp             = time(NULL);  // Get a tm structure
         struct tm *tick_time    = localtime(&temp);
@@ -97,9 +109,23 @@ Form mainForm;
         Label_SetText(lblDate,  StringFormatTime(tick_time, "%A", dateBuffer));
         Label_SetText(lblMonth, StringFormatTime(tick_time, "%B %d", monthBuffer));
     }
+    /**
+     * showAddress
+     * Display or the current street or city, state, country info
+     * is called every minute, by main timer
+     */
+    void showAddress() {
+        
+        if(_apiCount % 2 == 0) 
+            Label_SetText(lblLocation, _address);
+        else 
+            Label_SetText(lblLocation, _street);
+        _apiCount++;
+    }
     void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
         
-        mainForm_UpdateTime();
+        mainForm_UpdateTime();         
+        showAddress(); 
         
         if(tick_time->tm_min % WEATHER_REFRESH_RATE == 0) { // Get weather update every 50 minutes (and will also get the location)
             
@@ -115,7 +141,6 @@ Form mainForm;
         static char temperature[DEFAULT_STRING_BUFFER_SIZE]; // Must be static
         static char conditions [DEFAULT_STRING_BUFFER_SIZE];
         static char weather    [DEFAULT_STRING_BUFFER_SIZE];
-        static char location   [DEFAULT_STRING_BUFFER_SIZE];
         int requestId = -1;
         int vibrate = 0;
     
@@ -127,15 +152,18 @@ Form mainForm;
                 case KEY_REQUEST_ID : requestId = t->value->int32;                            break;
                 case KEY_TEMPERATURE: StringFormatInt(t->value->int32, "%dC", temperature);   break;            
                 case KEY_CONDITIONS : StringFormatString(t->value->cstring, "%s", conditions);break;
-                case KEY_LOCATION   : StringFormatString(t->value->cstring, "%s", location);  break;
+                case KEY_LOCATION   : StringFormatString(t->value->cstring, "%s", _address);  break;
+                case KEY_STREET     : StringFormatString(t->value->cstring, "%s", _street);  break;
                 case KEY_VIBRATE    : vibrate = t->value->int32;                              break;
                 default             : APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key); break;
             }
             t = dict_read_next(iterator);
         }
+        
         StringFormat(AsBuffer(weather), "%s - %s", temperature, conditions);
         Label_SetText(lblWeather, weather);
-        Label_SetText(lblLocation, location);
+        showAddress();
+        
         
         if(vibrate) { // Api requested to vibrate to notify something to the user
              vibes_short_pulse();
@@ -145,36 +173,29 @@ Form mainForm;
         if(requestId == KEY_REQUEST_ID_GET_WEATHER) {
             jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
         }
-        
     }
+    
 
 ////////////////////////////////////////////////////////////////////
 // MAIN
 ////////////////////////////////////////////////////////////////////
 
-static void init() {
-       
+int main(void) { 
+    
     Form_New(&mainForm, mainForm_Load, mainForm_Unload);
     mainForm_UpdateTime();
     jsCom_Initialize(mainForm_InboxReceivedCallback);
-    Timer_Register(MINUTE_UNIT, mainForm_EveryMinuteTimer);
-
-    //Trace_TraceError("HELLO WORLDISH %d", 1);
-    //Trace_TraceInformation("HELLO WORLDISH %d", 2);
-    //Trace_TraceWarning("HELLO WORLDISH %d", 3);
-    //Trace_TraceDebug("HELLO WORLDISH %d", 4);    
-    //jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);    
+    Timer_Register(MINUTE_UNIT, mainForm_EveryMinuteTimer);    
+    
     jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);
-}
-
-static void deinit() {
+        
+    app_event_loop();
     
     Form_Destructor(&mainForm);  // Also clean all associated controls
 }
 
-int main(void) { 
-    
-    init();
-    app_event_loop();
-    deinit();
-}
+//Trace_TraceError("HELLO WORLDISH %d", 1);
+//Trace_TraceInformation("HELLO WORLDISH %d", 2);
+//Trace_TraceWarning("HELLO WORLDISH %d", 3);
+//Trace_TraceDebug("HELLO WORLDISH %d", 4);    
+//jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);    
