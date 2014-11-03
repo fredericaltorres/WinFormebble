@@ -23,6 +23,12 @@ char *__StringFormatInt(int value, char * format, char * buffer, int bufferSize)
 #define StringFormatString(value, format, buffer) __StringFormatString(value, format, buffer, sizeof(buffer))
 char *__StringFormatString(char * value, char * format, char * buffer, int bufferSize);
 
+/*
+ * Datetime Method
+ */
+
+struct tm * DateTime_Now();
+
 // vector.h
 // http://www.happybearsoftware.com/implementing-a-dynamic-array.html
 // The implement a indexed list of integer    

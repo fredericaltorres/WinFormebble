@@ -159,21 +159,46 @@ void Label_SetSystemFont(TextLayer * label, const char *fontName) {
 }
 
 /*
- *  Unique Timer
+ *  Watch Face Unique Timer
  */    
 
-static TickHandler _Timer_Hanlder = NULL;
+static TickHandler _WatchFaceTimer_Hanlder = NULL;
 
-static void __Timer_Hanlder__(struct tm *tick_time, TimeUnits units_changed) {
+static void __WatchFaceTimer_Hanlder__(struct tm *tick_time, TimeUnits units_changed) {
     
-    if(_Timer_Hanlder != NULL) {
-        _Timer_Hanlder(tick_time, units_changed);
+    if(_WatchFaceTimer_Hanlder != NULL) {
+        _WatchFaceTimer_Hanlder(tick_time, units_changed);
     }
 }
-void Timer_Register(TimeUnits tick_units, TickHandler handler) {
+void WatchFaceTimer_Register(TimeUnits tick_units, TickHandler handler) {
     
-    _Timer_Hanlder = handler;
-    tick_timer_service_subscribe(tick_units, __Timer_Hanlder__); // Register with TickTimerService
+    _WatchFaceTimer_Hanlder = handler;
+    tick_timer_service_subscribe(tick_units, __WatchFaceTimer_Hanlder__); // Register with TickTimerService
+}
+void WatchFaceTimer_Unregister() {
+    
+    tick_timer_service_unsubscribe();
+}
+
+/*
+ * App Timer
+ */
+
+static AppTimerCallback _AppTimer_Hanlder = NULL;
+
+static void __AppTimer_Hanlder__(void * data) {
+    
+    if(_AppTimer_Hanlder != NULL)
+        _AppTimer_Hanlder(data);        
+}
+Timer AppTimer_Register(uint32_t timeout_ms, AppTimerCallback callback, void * callback_data) {
+    
+    _AppTimer_Hanlder = callback;
+    return app_timer_register(timeout_ms, __AppTimer_Hanlder__, callback_data);
+}
+void AppTimer_Unregister(Timer timerHandle) {
+    
+    app_timer_cancel(timerHandle);
 }
 
 /*

@@ -56,6 +56,18 @@ char *StringFormat2(char * format, char * buffer, int bufferSize, ...) {
    
 }*/
 
+
+/*
+ * Datetime Method
+ */
+
+struct tm * DateTime_Now() {
+    
+    time_t temp             = time(NULL);  // Get a tm structure
+    struct tm *tick_time    = localtime(&temp);
+    return tick_time;
+}    
+
 /*
  * String Format Methods
  */

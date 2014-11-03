@@ -18,6 +18,7 @@
 #define event static void   
 #define Label static TextLayer *
 #define Menu MenuLayer *
+#define Timer AppTimer *     
     
 // Form -----------------------------------------------------------
 typedef struct {
@@ -51,10 +52,12 @@ void Label_SetSystemFont(TextLayer * label, const char * fontName);
 
 
 /*
- *  Unique Timer
- */    
-void Timer_Register(TimeUnits tick_units, TickHandler handler);
-
+ *  Watch face and app unique timer
+ */
+void WatchFaceTimer_Register(TimeUnits tick_units, TickHandler handler);
+void WatchFaceTimer_Unregister();
+Timer AppTimer_Register(uint32_t timeout_ms, AppTimerCallback callback, void * callback_data);
+void AppTimer_Unregister(Timer timerHandle);
 
 MenuLayer * Menu_New(Form * form);
 void Menu_Add(char * entry);
