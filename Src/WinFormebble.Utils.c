@@ -241,32 +241,40 @@ char *StringFormat2(char * format, char * buffer, int bufferSize, ...) {
 
 /*
  * Datetime Method
+ * http://www.epochconverter.com/
  */
 
-struct tm * DateTime_Now() {
+private struct tm * DateTime_Now_NonReEntrant() {
     
     time_t temp             = time(NULL);  // Get a tm structure
     struct tm *tick_time    = localtime(&temp);
     return tick_time;
 }    
 
+struct tm * DateTime_Now() {
+    
+    static struct tm DateTime_tick_time; // Not ReEntrant
+    memcpy(&DateTime_tick_time, DateTime_Now_NonReEntrant(), sizeof(struct tm));
+    return &DateTime_tick_time;
+}
+
 struct tm * DateTime(int year, int month, int day, int hour, int minutes, int seconds) {
     
-    time_t temp             = time(NULL);  // Get a tm structure
-    struct tm *tick_time    = localtime(&temp);
- 
-    tick_time->tm_sec  = seconds;
-    tick_time->tm_min  = minutes;
-    tick_time->tm_hour = hour;
-    tick_time->tm_min  = minutes;
-    tick_time->tm_mday = day;
-    tick_time->tm_mon  = month - 1;
-    tick_time->tm_year = year - 1900;
+    static struct tm DateTime_tick_time; // Not ReEntrant
+    memcpy(&DateTime_tick_time, DateTime_Now_NonReEntrant(), sizeof(struct tm));
+     
+    DateTime_tick_time.tm_sec  = seconds;
+    DateTime_tick_time.tm_min  = minutes;
+    DateTime_tick_time.tm_hour = hour;
+    DateTime_tick_time.tm_min  = minutes;
+    DateTime_tick_time.tm_mday = day;
+    DateTime_tick_time.tm_mon  = month - 1;
+    DateTime_tick_time.tm_year = year - 1900;
     //tick_time.tm_wday = ?;
     //tick_time.tm_yday = ?;
-    tick_time->tm_isdst = 0;
+    DateTime_tick_time.tm_isdst = 0;
     
-    return tick_time;
+    return &DateTime_tick_time;
 }
 
 time_t DateTime_ToTimeT(struct tm * dateTime) {
@@ -279,15 +287,10 @@ int DateTime_Diff(char unit, struct tm * dateTime1, struct tm * dateTime2) {
     time_t second1 = DateTime_ToTimeT(dateTime1);
     time_t second2 = DateTime_ToTimeT(dateTime2);
     int difference;
-    difference = (((second2 - second1) / 60) / 60) / 24;      
-    
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "second1:%d, second2:%d, difference:%d", (int)second1, (int)second2, difference);
-    
-    return difference;
-    
+  
     switch(unit) {
         
-        case 's' : difference = second2 - second1 ;                      break; // Seconds
+        case 's' : difference = second2 - second1;                       break; // Seconds
         case 'm' : difference = (second2 - second1) / 60;                break; // Minutes
         case 'h' : difference = ((second2 - second1) / 60) / 60;         break; // Hour
         case 'd' : difference = (((second2 - second1) / 60) / 60) / 24;  break; // Days

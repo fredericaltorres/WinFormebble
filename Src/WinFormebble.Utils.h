@@ -8,6 +8,11 @@
  */
 #include <pebble.h>
     
+    
+    
+    
+#define private    
+    
 // Util Defines
 
 #define StringFormat snprintf
