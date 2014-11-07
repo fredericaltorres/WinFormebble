@@ -15,7 +15,7 @@
  * Licence: MIT
  *
  */
-#include <pebble.h>
+#include <pebble.h>  
 #include <pebble_fonts.h>
 #include "WinFormebble.h"
 #include "jsCom.h"
@@ -99,7 +99,7 @@ Form mainForm;
         char newHour[3];
         
         // Vibrate a t the beginning of each hour
-        strcpy(newHour, StringFormatTime(tick_time, "%H", timeBuffer));
+        strcpy(newHour, StringFormatTime(tick_time, "%H", newHour));
         if(strcmp(_currentHour, newHour) != 0) {
             strcpy(_currentHour, newHour);
             vibes_short_pulse();
