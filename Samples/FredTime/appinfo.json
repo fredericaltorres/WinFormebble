@@ -3,7 +3,9 @@
         "KEY_CONDITIONS": 1,
         "KEY_LOCATION": 2,
         "KEY_REQUEST_ID": 0,
-        "KEY_TEMPERATURE": 3
+        "KEY_STREET": 5,
+        "KEY_TEMPERATURE": 3,
+        "KEY_VIBRATE": 4
     },
     "capabilities": [
         "location"
