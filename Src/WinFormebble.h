@@ -54,8 +54,9 @@ void Label_SetSystemFont(TextLayer * label, const char * fontName);
 /*
  *  Watch face and app unique timer
  */
-void WatchFaceTimer_Register(TimeUnits tick_units, TickHandler handler);
-void WatchFaceTimer_Unregister();
+void Form_RegisterWatchFaceTimer(TimeUnits tick_units, TickHandler handler);
+void Form_UnregisterWatchFaceTimer();
+
 Timer AppTimer_Register(uint32_t timeout_ms, AppTimerCallback callback, void * callback_data);
 void AppTimer_Unregister(Timer timerHandle);
 

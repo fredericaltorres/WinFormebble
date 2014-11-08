@@ -8,6 +8,50 @@
  */
 #include <pebble.h>
 #include "WinFormebble.h"
+    
+    
+/*
+ *  Watch Face Unique Timer
+ */    
+
+static TickHandler _WatchFaceTimer_Hanlder = NULL;
+
+static void __WatchFaceTimer_Hanlder__(struct tm *tick_time, TimeUnits units_changed) {
+    
+    if(_WatchFaceTimer_Hanlder != NULL) {
+        _WatchFaceTimer_Hanlder(tick_time, units_changed);
+    }
+}
+void Form_RegisterWatchFaceTimer(TimeUnits tick_units, TickHandler handler) {
+    
+    _WatchFaceTimer_Hanlder = handler;
+    tick_timer_service_subscribe(tick_units, __WatchFaceTimer_Hanlder__); // Register with TickTimerService
+}
+void Form_UnregisterWatchFaceTimer() {
+    
+    tick_timer_service_unsubscribe();
+}
+
+/*
+ * App Timer
+ */
+
+static AppTimerCallback _AppTimer_Hanlder = NULL;
+
+static void __AppTimer_Hanlder__(void * data) {
+    
+    if(_AppTimer_Hanlder != NULL)
+        _AppTimer_Hanlder(data);        
+}
+Timer AppTimer_Register(uint32_t timeout_ms, AppTimerCallback callback, void * callback_data) {
+    
+    _AppTimer_Hanlder = callback;
+    return app_timer_register(timeout_ms, __AppTimer_Hanlder__, callback_data);
+}
+void AppTimer_Unregister(Timer timerHandle) {
+    
+    app_timer_cancel(timerHandle);
+}
 
 /*
  *     Form Methods
@@ -32,6 +76,10 @@ void Form_Destructor(Form *form) {
     }
     window_destroy(form->WindowHandle);
     vector_free(&form->_vectorLabels);
+    
+    if(_WatchFaceTimer_Hanlder != NULL) {
+        Form_UnregisterWatchFaceTimer();
+    }
 }
 void Form_AddLabel(Form *form, TextLayer * label) {
     
@@ -158,48 +206,6 @@ void Label_SetSystemFont(TextLayer * label, const char *fontName) {
     text_layer_set_font(label, Font_LoadSystem(fontName));
 }
 
-/*
- *  Watch Face Unique Timer
- */    
-
-static TickHandler _WatchFaceTimer_Hanlder = NULL;
-
-static void __WatchFaceTimer_Hanlder__(struct tm *tick_time, TimeUnits units_changed) {
-    
-    if(_WatchFaceTimer_Hanlder != NULL) {
-        _WatchFaceTimer_Hanlder(tick_time, units_changed);
-    }
-}
-void WatchFaceTimer_Register(TimeUnits tick_units, TickHandler handler) {
-    
-    _WatchFaceTimer_Hanlder = handler;
-    tick_timer_service_subscribe(tick_units, __WatchFaceTimer_Hanlder__); // Register with TickTimerService
-}
-void WatchFaceTimer_Unregister() {
-    
-    tick_timer_service_unsubscribe();
-}
-
-/*
- * App Timer
- */
-
-static AppTimerCallback _AppTimer_Hanlder = NULL;
-
-static void __AppTimer_Hanlder__(void * data) {
-    
-    if(_AppTimer_Hanlder != NULL)
-        _AppTimer_Hanlder(data);        
-}
-Timer AppTimer_Register(uint32_t timeout_ms, AppTimerCallback callback, void * callback_data) {
-    
-    _AppTimer_Hanlder = callback;
-    return app_timer_register(timeout_ms, __AppTimer_Hanlder__, callback_data);
-}
-void AppTimer_Unregister(Timer timerHandle) {
-    
-    app_timer_cancel(timerHandle);
-}
 
 /*
  *  Menu
