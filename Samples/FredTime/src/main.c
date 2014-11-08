@@ -55,8 +55,9 @@ Form mainForm;
     static char _street[DEFAULT_STRING_BUFFER_SIZE];
     static char _address[DEFAULT_STRING_BUFFER_SIZE];
     static int _apiCount = 0;
+    static int _timerCount = 0;
 
-    event mainForm_Load(Window *window) {
+    private void mainForm_Load(Window *window) {
         
         Trace_TraceDebug("-- mainForm_Load --");
         
@@ -83,11 +84,11 @@ Form mainForm;
         Label_SetText(lblLocation, NOT_INITIALIZED);
         Form_AddLabel(&mainForm, lblLocation);
     }
-    event mainForm_Unload(Window *window) {
+    private void mainForm_Unload(Window *window) {
         
        Trace_TraceDebug("-- mainForm_Load --"); 
     }  
-    void mainForm_UpdateTime() {    
+    private void mainForm_UpdateTime() {    
         
         Trace_TraceDebug("-- mainForm_UpdateTime --");
         
@@ -114,7 +115,7 @@ Form mainForm;
      * Display or the current street or city, state, country info
      * is called every minute, by main timer
      */
-    void showAddress() {
+    private void showAddress() {
         
         if(_apiCount % 2 == 0) 
             Label_SetText(lblLocation, _address);
@@ -122,26 +123,32 @@ Form mainForm;
             Label_SetText(lblLocation, _street);
         _apiCount++;
     }
-    void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
+    private void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
         
         mainForm_UpdateTime();         
         showAddress(); 
         
-        if(tick_time->tm_min % WEATHER_REFRESH_RATE == 0) { // Get weather update every 50 minutes (and will also get the location)
+        if((_timerCount == 0) || (tick_time->tm_min % WEATHER_REFRESH_RATE == 0)) { // Get weather update every 50 minutes (and will also get the location)
             
             jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);
         }
-        else if(tick_time->tm_min % LOCATION_REFRESH_RATE == 0) { // Get location every 12 minutes when we are not asking for weather
+        else if((_timerCount == 0) || (tick_time->tm_min % LOCATION_REFRESH_RATE == 0)) { // Get location every 12 minutes when we are not asking for weather
             
             jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
         }
     }
-    void  mainForm_InboxReceivedCallback(DictionaryIterator *iterator, void *context) {
+    private int CelsiusToFahrenheit(int v) {
+        
+        double d = (v * 9.0 / 5.0) + 32.0;
+        return d;
+    } 
+    private void mainForm_InboxReceivedCallback(DictionaryIterator *iterator, void *context) {
       
         static char temperature[DEFAULT_STRING_BUFFER_SIZE]; // Must be static
         static char conditions [DEFAULT_STRING_BUFFER_SIZE];
         static char weather    [DEFAULT_STRING_BUFFER_SIZE];
         int requestId = -1;
+        int tempCelsius = 0;
         int vibrate = 0;
     
         Tuple * t = dict_read_first(iterator);
@@ -150,20 +157,19 @@ Form mainForm;
             switch(t->key) {
                 
                 case KEY_REQUEST_ID : requestId = t->value->int32;                            break;
-                case KEY_TEMPERATURE: StringFormatInt(t->value->int32, "%dC", temperature);   break;            
+                case KEY_TEMPERATURE: tempCelsius = t->value->int32;                          break;
                 case KEY_CONDITIONS : StringFormatString(t->value->cstring, "%s", conditions);break;
                 case KEY_LOCATION   : StringFormatString(t->value->cstring, "%s", _address);  break;
-                case KEY_STREET     : StringFormatString(t->value->cstring, "%s", _street);  break;
+                case KEY_STREET     : StringFormatString(t->value->cstring, "%s", _street);   break;
                 case KEY_VIBRATE    : vibrate = t->value->int32;                              break;
                 default             : APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key); break;
             }
             t = dict_read_next(iterator);
         }
         
-        StringFormat(AsBuffer(weather), "%s - %s", temperature, conditions);
+        StringFormat(AsBuffer(weather), "%dC,%dF - %s", tempCelsius, CelsiusToFahrenheit(tempCelsius), conditions);
         Label_SetText(lblWeather, weather);
         showAddress();
-        
         
         if(vibrate) { // Api requested to vibrate to notify something to the user
              vibes_short_pulse();
@@ -183,11 +189,9 @@ Form mainForm;
 int main(void) { 
     
     Form_New(&mainForm, mainForm_Load, mainForm_Unload);
-    mainForm_UpdateTime();
     jsCom_Initialize(mainForm_InboxReceivedCallback);
-    Timer_Register(MINUTE_UNIT, mainForm_EveryMinuteTimer);    
-    
-    jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);
+    Form_RegisterWatchFaceTimer(MINUTE_UNIT, mainForm_EveryMinuteTimer);    
+    mainForm_UpdateTime();
         
     app_event_loop();
     
