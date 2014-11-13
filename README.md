@@ -75,8 +75,7 @@ Form mainForm;
    
     private void mainForm_Load(Window *window) {
         
-        lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, GTextAlignmentCenter, 
-                           FONT_KEY_ROBOTO_CONDENSED_21);
+        lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblMsg, "Hello World");
         Form_AddLabel(mainForm, lblMsg);
     }
@@ -118,13 +117,11 @@ Form mainForm;
     }
     private void mainForm_Load(Window *window) {
         
-        lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, 
-                           GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
+        lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblMsg, "Hello World");
         Form_AddLabel(mainForm, lblMsg);
                
-        lblTime = Label_New(GRect(0, 60, 139, 25), WhiteBackground, 
-                            GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
+        lblTime = Label_New(GRect(0, 60, 139, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         Form_AddLabel(mainForm, lblTime);
         
@@ -188,13 +185,11 @@ Form mainForm;
     }
     private void mainForm_Load(Window *window) {
         
-        lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, 
-                           GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
+        lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblMsg, "Hello World");
         Form_AddLabel(mainForm, lblMsg);
                
-        lblTime = Label_New(GRect(0, 60, 139, 25), WhiteBackground, 
-                            GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
+        lblTime = Label_New(GRect(0, 60, 139, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         Form_AddLabel(mainForm, lblTime);
         
