@@ -7,30 +7,62 @@
  * Licence: MIT
  */
 #include <pebble.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <string.h>
 #include "WinFormebble.Utils.h"  
-    
-/*
-    
-*/    
  
-//#define class(type) static type   
-//#define classy(type, var) static type #var;
 #define event static void   
 #define Label static TextLayer *
 #define Menu MenuLayer *
-#define Timer AppTimer *     
+#define Timer AppTimer*
+
+private int __WinFormebble__GetNewUniqueInt();
+
     
 // Form -----------------------------------------------------------
+typedef enum {
+    CONTROL_TYPE_LABEL = 0,
+    CONTROL_TYPE_TIMER = 1,
+} ControlTypeEnum;
+
+typedef struct {
+    
+    ControlTypeEnum ControlType;
+    void * Control;
+    
+} ControlInfo;
+
+// ControlInfo Array
+DArray*      ControlInfo_New       ();
+void         ControlInfo_Push      (DArray *array, ControlInfo *s);
+ControlInfo* ControlInfo_Pop       (DArray *array);
+ControlInfo* ControlInfo_Get       (DArray *array, int index);
+void         ControlInfo_Set       (DArray *array, int index, ControlInfo *s);
+void         ControlInfo_Destructor(DArray *array);
+int          ControlInfo_GetLength (DArray *array);
+ControlInfo* ControlInfo_NewInstance(ControlTypeEnum controlType, void * control);
+
 typedef struct {
     
     Window    *WindowHandle;
-    Vector    _vectorLabels;
-} Form;
+    DArray*   _controlInfos;
+    
+} FormStruct;
 
-void Form_New(Form * form, WindowHandler load, WindowHandler unload);
-void Form_Destructor(Form * form);
-void Form_AddLabel(Form * form, TextLayer * label);
-void Form_RegisterButtonHandlers(Form *form, ClickHandler selectClickHandler, ClickHandler upClickHandler, ClickHandler downClickHandler);
+#define Form FormStruct*
+
+Form  Form_New();
+void  Form_Initialize(Form form, WindowHandler load, WindowHandler unload);
+void  Form_Show(Form form);
+void  Form_Destructor(Form form);
+void  Form_AddLabel(Form form, TextLayer * label);
+void  Form_RegisterButtonHandlers(Form form, ClickHandler selectClickHandler, ClickHandler upClickHandler, ClickHandler downClickHandler);
+Timer Form_StartTimer(Form form, uint32_t timeout_ms, AppTimerCallback callback/*, void * callback_data*/);
+Timer Form_StopTimer(Timer timer);
+Timer Form_ResumeTimer(Timer timer);
+bool  Form_IsTimerEnabled(Timer timer);
 
 // Font -----------------------------------------------------------
 
@@ -57,10 +89,7 @@ void Label_SetSystemFont(TextLayer * label, const char * fontName);
 void Form_RegisterWatchFaceTimer(TimeUnits tick_units, TickHandler handler);
 void Form_UnregisterWatchFaceTimer();
 
-Timer AppTimer_Register(uint32_t timeout_ms, AppTimerCallback callback, void * callback_data);
-void AppTimer_Unregister(Timer timerHandle);
-
-MenuLayer * Menu_New(Form * form);
+MenuLayer * Menu_New(Form form);
 void Menu_Add(char * entry);
 void Menu_Destructor(Menu menu);
 

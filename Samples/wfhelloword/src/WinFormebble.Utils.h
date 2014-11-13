@@ -8,9 +8,6 @@
  */
 #include <pebble.h>
     
-    
-    
-    
 #define private    
     
 // Util Defines
@@ -37,34 +34,40 @@ struct tm * DateTime(int Year, int Month, int Day, int Hour, int Minutes, int Se
 time_t DateTime_ToTimeT(struct tm * dateTime);
 int DateTime_Diff(char unit, struct tm * dateTime1, struct tm * dateTime2);
 
-/* ============== VECTOR ================== */
-
-// vector.h
-// http://www.happybearsoftware.com/implementing-a-dynamic-array.html
-// The implement a indexed list of integer    
-#define VECTOR_INITIAL_CAPACITY 100
-// Define a vector type
-typedef struct {
-  int size;      // slots used so far
-  int capacity;  // total available slots
-  int *data;     // array of integers we're storing
-} Vector;
-void vector_init(Vector *vector);
-void vector_append(Vector *vector, int value);
-int vector_get(Vector *vector, int index);
-void vector_set(Vector *vector, int index, int value);
-void vector_double_capacity_if_full(Vector *vector);
-void vector_free(Vector *vector);
-
 /* ============== PDPCLIB ================== */
-
 /*
   This code is derived from PDPCLIB, the public domain C runtime
   library by Paul Edwards. http://pdos.sourceforge.net/
-
   This code is released to the public domain.
 */
 
 time_t p_mktime(struct tm *tmptr);
 char *p_strtok(char *s1, const char *s2);
 long int p_strtol(const char *nptr, char **endptr, int base);
+
+/* ============== DARRAY ================== */
+/*
+	darray - Dynamic array for C based on darray.h from https://gist.github.com/dce/5187025
+	https://gist.github.com/dce
+	David Eisinger
+*/
+
+typedef struct {
+	void **data;
+	int last;
+	int size;
+} DArray;
+
+#define PDArray DArray*
+#define PDatatArray void**
+
+DArray* darray_init      ();
+void    darray_resize    (DArray *array, int size);
+void*   darray_get       (DArray *array, int index);
+void    darray_free      (DArray *array);
+void    darray_set       (DArray *array, int index, void *value);
+void    darray_push      (DArray *array, void *value);
+void*   darray_pop       (DArray *array);
+DArray* darray_radix_sort(DArray *array);
+
+

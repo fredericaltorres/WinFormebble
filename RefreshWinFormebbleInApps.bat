@@ -6,3 +6,8 @@ pause
 
 call RefreshApp.bat FredTime
 call RefreshApp.bat wfhelloword
+call RefreshApp.bat ccWatchFaceWeather
+call RefreshApp.bat ccTime
+
+
+pause

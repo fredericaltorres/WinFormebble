@@ -5,7 +5,7 @@
  * Use the library WinFormebble (https://github.com/fredericaltorres/WinFormebble)
  * Licence: MIT
  *
- */
+ *
 #include <pebble.h>
 #include <pebble_fonts.h>
 #include "WinFormebble.h"
@@ -33,3 +33,4 @@ int main(void) {
     app_event_loop();
     Form_Destructor(mainForm);  // Also clean all associated controls
 }
+*/

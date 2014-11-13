@@ -1,0 +1,23 @@
+{
+    "appKeys": {
+        "KEY_CONDITIONS": 1,
+        "KEY_REQUEST_ID": 0,
+        "KEY_TEMPERATURE": 2
+    },
+    "capabilities": [
+        "location"
+    ],
+    "companyName": "FredericALTorres",
+    "longName": "CCWatchFaceWeather",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "shortName": "CCWatchFaceWeather",
+    "uuid": "54d1382c-33cc-49fe-ab8b-f19c8b344947",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}

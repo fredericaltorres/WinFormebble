@@ -2,9 +2,7 @@
  * Hello Word App for the Pebble with WinFormebble
  * 
  * (C) Torres Frederic 2014
- *
  * Use the library WinFormebble (https://github.com/fredericaltorres/WinFormebble)
- *
  * Licence: MIT
  *
  *
@@ -18,37 +16,38 @@ Form mainForm;
 
     Label lblMsg;
     Label lblTime;
-    Timer _timer;
+    Timer _timer = NULL;
     
-    event timer_callback(void * data) {
+    private void _timer_Tick(void * data)  {
         
         static char timeBuffer [8+1];
         struct tm *tick_time = DateTime_Now();
         
+        // Format %T HH:MM:SS
         Label_SetText(lblTime, StringFormatTime(tick_time, "%T", timeBuffer));
-        _timer = AppTimer_Register(1000, timer_callback, NULL);
     }
-    event mainForm_Load(Window *window) {
+    private void mainForm_Load(Window *window) {
         
         lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblMsg, "Hello World");
-        Form_AddLabel(&mainForm, lblMsg);
+        Form_AddLabel(mainForm, lblMsg);
                
         lblTime = Label_New(GRect(0, 60, 139, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
-        Form_AddLabel(&mainForm, lblTime);
+        Form_AddLabel(mainForm, lblTime);
         
-        _timer = AppTimer_Register(1000, timer_callback, NULL);
+        _timer = Form_StartTimer(mainForm, 1000, _timer_Tick);
     }
-    event mainForm_Unload(Window *window) {
+    private void mainForm_Unload(Window *window) {
         
     }
   
 
 int main(void) { 
-    
-    Form_New(&mainForm, mainForm_Load, mainForm_Unload);
+    mainForm = Form_New();
+    Form_Initialize(mainForm, mainForm_Load, mainForm_Unload);
+    Form_Show(mainForm);
     app_event_loop();
-    Form_Destructor(&mainForm);  // Also clean all associated controls
+    Form_Destructor(mainForm);  // Also clean all associated controls
 }
 */
