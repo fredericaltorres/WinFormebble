@@ -1,0 +1,69 @@
+﻿<#@ template language="C#" hostspecific="True"#>
+<#@include file="MultipleOutputHelper.ttinclude"#>
+<# var manager = Manager.Create(Host, GenerationEnvironment); #>
+<# string CLASS_NAMES = "TestStruct|ControlInfo"; #>
+
+<#/*  -- GENERATE THE H FILE --*/#>
+<# manager.StartNewFile("GeneratedArray.h"); #>
+
+	/*
+		WinFormebble
+		Generated Array Classes
+	*/ 
+
+<# foreach(string className in CLASS_NAMES.Split('|')) { #>
+
+	/**
+	 * <#=className #> Header File
+	 * Array Class: <#=className #>
+	 * Generated Code based on the darray.c library
+	 */
+			 
+	typedef struct {
+		int type;
+		int data;
+	} <#=className #>;
+
+	DArray*      <#=className #>_New       ();
+	void         <#=className #>_Push      (DArray *array, <#=className #> *s);
+	<#=className #>*  <#=className #>_Pop  (DArray *array);
+	<#=className #>*  <#=className #>_Get  (DArray *array, int index);
+	void         <#=className #>_Set       (DArray *array, int index, <#=className#> *s);
+	void         <#=className #>_Destructor(DArray *array);
+	int          <#=className #>_GetLength (DArray *array);
+
+<# } #>
+		
+<# manager.EndBlock(); #>
+<#/*  -- GENERATE THE C FILE -- */#>
+<# manager.StartNewFile("GeneratedArray.cpp"); #>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+#include <time.h>
+#include <string.h>
+#include "darray.h"
+#include "GeneratedArray.h"
+
+<# foreach(string className in CLASS_NAMES.Split('|')){ #>   
+
+	/**
+	 * <#=className #> Clode File
+	 * Array Class: <#=className #>
+	 * Generated Code based on the darray.c library 
+	 */
+
+	DArray*      <#=className #>_New           ()                                             { return darray_init();                               }
+	void         <#=className #>_Push          (DArray *array, <#=className #> *s)            { darray_push(array, s);                              }
+	<#=className #>* <#=className #>_Pop       (DArray *array)                                { return (<#=className #> *)darray_pop(array);        }        
+	<#=className #>* <#=className #>_Get       (DArray *array, int index)                     { return (<#=className #> *)darray_get(array, index); } 
+	void         <#=className #>_Set           (DArray *array, int index, <#=className#> *s)  { darray_set(array, index, s);                        }
+	void         <#=className #>_Destructor    (DArray *array)                                { darray_free(array);                                 }
+	int          ControlInfo_GetLength         (DArray *array)                                { return array->last; }
+            
+<# } #>
+
+<# manager.EndBlock(); #>
+<# manager.Process(true); #>
+ 

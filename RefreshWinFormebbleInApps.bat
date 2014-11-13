@@ -5,3 +5,4 @@ echo -----------------------------------------------------------
 pause
 
 call RefreshApp.bat FredTime
+call RefreshApp.bat wfhelloword

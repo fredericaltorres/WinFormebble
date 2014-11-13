@@ -1,0 +1,26 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "fredericaltorres@gmail.com",
+    "longName": "WinFormHelloWord",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/img28x28.png",
+                "menuIcon": true,
+                "name": "APP_ICON",
+                "type": "png"
+            }
+        ]
+    },
+    "shortName": "wfHelloWord",
+    "uuid": "09653c09-8376-4c6f-a038-b07355faa915",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}

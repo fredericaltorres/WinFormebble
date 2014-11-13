@@ -9,14 +9,6 @@
 #include <pebble.h>
 #include "WinFormebble.h"
     
-private int __WinFormebble__UniqueInt = 0;
-
-private int __WinFormebble__GetNewUniqueInt() {
-   
-    __WinFormebble__UniqueInt += 1;
-    return __WinFormebble__UniqueInt;
-}
-    
     
 /*
  *  Watch Face Unique Timer
@@ -44,102 +36,55 @@ void Form_UnregisterWatchFaceTimer() {
  * App Timer
  */
 
-/*
-AppTimer * AppTimer_Register(uint32_t timeout_ms, AppTimerCallback callback, void * callback_data) {
+static AppTimerCallback _AppTimer_Hanlder = NULL;
+
+static void __AppTimer_Hanlder__(void * data) {
+    
+    if(_AppTimer_Hanlder != NULL)
+        _AppTimer_Hanlder(data);        
+}
+Timer AppTimer_Register(uint32_t timeout_ms, AppTimerCallback callback, void * callback_data) {
     
     _AppTimer_Hanlder = callback;
-    _AppTimer_Timeout = timeout_ms;
-    return app_timer_register(_AppTimer_Timeout, __AppTimer_Hanlder__, callback_data);
+    return app_timer_register(timeout_ms, __AppTimer_Hanlder__, callback_data);
 }
-void AppTimer_Unregister(AppTimer * timerHandle) {
+void AppTimer_Unregister(Timer timerHandle) {
     
     app_timer_cancel(timerHandle);
-}*/
-
+}
 
 /*
  *     Form Methods
  */    
-ControlInfo* ControlInfo_NewInstance(ControlTypeEnum controlType, void* control) {
-
-	ControlInfo* i;
-	i              = (ControlInfo*)malloc(sizeof(ControlInfo));
-	i->ControlType = controlType;
-	i->Control     = control;
-	return i;
-}
-Form Form_New() {
-    Form f = (Form)malloc(sizeof(FormStruct));
-    f->_controlInfos = ControlInfo_New();
-    f->WindowHandle = window_create();
-    return f;
-}
-void Form_Initialize(Form form, WindowHandler load, WindowHandler unload) {
+void Form_New(Form *form, WindowHandler load, WindowHandler unload) {
+        
+    //form->_labelCounter = 0;    
+    vector_init(&form->_vectorLabels);
     
+    form->WindowHandle = window_create();
     window_set_window_handlers(form->WindowHandle, (WindowHandlers)  {
         .load   = load,
         .unload = unload
     });
     window_stack_push(form->WindowHandle, true);
 }
-void Form_Show(Form form) {
-    
-    window_stack_push(form->WindowHandle, true);
-}
-void Form_Destructor(Form form) { 
-    
-    for(int i=0; i<ControlInfo_GetLength(form->_controlInfos); i++) {
-        
-        ControlInfo *ci = ControlInfo_Get(form->_controlInfos, i);
-        if(ci->ControlType == CONTROL_TYPE_LABEL) {
-            Label_Destructor((TextLayer*)ci->Control);
-        }
+void Form_Destructor(Form *form) {    
+    int i;
+    // Free the labels
+    for(i=0; i<form->_vectorLabels.size; i++) {       
+       Label_Destructor((TextLayer*)vector_get(&form->_vectorLabels, i));
     }
-    ControlInfo_Destructor(form->_controlInfos);
     window_destroy(form->WindowHandle);
+    vector_free(&form->_vectorLabels);
     
     if(_WatchFaceTimer_Hanlder != NULL) {
         Form_UnregisterWatchFaceTimer();
     }
-    free(form);
 }
-void Form_AddLabel(Form form, TextLayer * label) {
+void Form_AddLabel(Form *form, TextLayer * label) {
     
     layer_add_child(window_get_root_layer(form->WindowHandle), text_layer_get_layer(label));
-    ControlInfo_Push(form->_controlInfos, ControlInfo_NewInstance(CONTROL_TYPE_LABEL, (void*)label));
-}
-
-static AppTimerCallback _AppTimer_Handler = NULL;
-uint32_t                _AppTimer_Timeout = 0;
-bool                    _AppTimer_On      = false;
-
-static void __AppTimer_Hanlder__(void * data) {
-    
-    if((_AppTimer_On) && (_AppTimer_Handler != NULL)) {
-        _AppTimer_Handler(data);
-        if(_AppTimer_On) {
-            app_timer_register(_AppTimer_Timeout, __AppTimer_Hanlder__, NULL);
-        }
-    }
-}
-Timer Form_StartTimer(Form form, uint32_t timeout_ms, AppTimerCallback callback/*, void * callback_data*/) {
-    
-    _AppTimer_Handler = callback;
-    _AppTimer_Timeout = timeout_ms;
-    return Form_ResumeTimer(NULL);
-    //return app_timer_register(timeout_ms, callback, callback_data);
-}
-Timer Form_StopTimer(Timer timer) {    
-    _AppTimer_On = false;
-    //if(timer != NULL) { app_timer_cancel(timer); }
-    return NULL;
-}
-Timer Form_ResumeTimer(Timer timer) {
-    _AppTimer_On = true;
-    return app_timer_register(_AppTimer_Timeout, __AppTimer_Hanlder__, NULL);
-}
-bool Form_IsTimerEnabled(Timer timer) {
-    return _AppTimer_On;
+    vector_append(&form->_vectorLabels, (int)label);
 }
 
 /*
@@ -208,18 +153,12 @@ static void __Form__ButHandlerConfigProvider(void *context) {
     window_single_click_subscribe(BUTTON_ID_UP, __Form__butUp_Click);
     window_single_click_subscribe(BUTTON_ID_DOWN, __Form__butDown_Click);
 }
-void Form_RegisterButtonHandlers(Form form, ClickHandler selectClickHandler, ClickHandler upClickHandler, ClickHandler downClickHandler) {
+void Form_RegisterButtonHandlers(Form *form, ClickHandler selectClickHandler, ClickHandler upClickHandler, ClickHandler downClickHandler) {
     
     window_set_click_config_provider(form->WindowHandle, __Form__ButHandlerConfigProvider);
-    if(selectClickHandler != NULL) {
-        __Button__Select__ClickHandler = selectClickHandler;
-    }
-    if(upClickHandler != NULL) {
-        __Button__Up__ClickHandler = upClickHandler;
-    }
-    if(downClickHandler != NULL) {
-        __Button__Down__ClickHandler = downClickHandler;
-    }
+    __Button__Select__ClickHandler = selectClickHandler;
+    __Button__Up__ClickHandler     = upClickHandler;
+    __Button__Down__ClickHandler   = downClickHandler;
 }
 
 /*
@@ -297,7 +236,7 @@ void __Menu__select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index,
         __Menu__MenuLayerSelectCallback(menu_layer, cell_index, callback_context);
     }
 }
-MenuLayer * Menu_New(Form form/*, MenuLayerSelectCallback menuLayerSelectCallback*/) {
+MenuLayer * Menu_New(Form * form/*, MenuLayerSelectCallback menuLayerSelectCallback*/) {
     
     _Menu__Counter                  = 0;
     //__Menu__MenuLayerSelectCallback = menuLayerSelectCallback;
@@ -335,19 +274,3 @@ void Menu_Destructor(MenuLayer *menuLayer) {
     Images
     Pebble Image https://github.com/pebble/PebbleUI
 */
-
-
-   /** 
-	 * ControlInfo Clode File
-	 * Array Class: ControlInfo
-	 * Generated Code based on the darray.c library 
-	 */
-
-	DArray*      ControlInfo_New       ()                                           { return darray_init();                               }
-	void         ControlInfo_Push      (DArray *array, ControlInfo *s)              { darray_push(array, s);                              }
-	ControlInfo* ControlInfo_Pop       (DArray *array)                              { return (ControlInfo *)darray_pop(array);        }        
-	ControlInfo* ControlInfo_Get       (DArray *array, int index)                   { return (ControlInfo *)darray_get(array, index); } 
-	void         ControlInfo_Set       (DArray *array, int index, ControlInfo *s)   { darray_set(array, index, s);                        }
-	void         ControlInfo_Destructor(DArray *array)                              { darray_free(array);                                 }
-    int          ControlInfo_GetLength (DArray *array)                              { return array->last; }
-            
