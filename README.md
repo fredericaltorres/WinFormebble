@@ -17,13 +17,14 @@ void  Form_Initialize(Form form, WindowHandler load, WindowHandler unload);
 void  Form_Show(Form form);
 void  Form_Destructor(Form form);
 void  Form_AddLabel(Form form, TextLayer * label);
-void  Form_RegisterButtonHandlers(Form form, ClickHandler selectClickHandler, ClickHandler upClickHandler, ClickHandler downClickHandler);
-Timer Form_StartTimer(Form form, uint32_t timeout_ms, AppTimerCallback callback/*, void * callback_data*/);
+void  Form_RegisterButtonHandlers(Form form, ClickHandler selectClickHandler, 
+                                  ClickHandler upClickHandler, ClickHandler downClickHandler);
+Timer Form_StartTimer(Form form, uint32_t timeout_ms, AppTimerCallback callback);
 Timer Form_StopTimer(Timer timer);
 Timer Form_ResumeTimer(Timer timer);
 bool  Form_IsTimerEnabled(Timer timer);
-void Form_RegisterWatchFaceTimer(TimeUnits tick_units, TickHandler handler);
-void Form_UnregisterWatchFaceTimer();
+void  Form_RegisterWatchFaceTimer(TimeUnits tick_units, TickHandler handler);
+void  Form_UnregisterWatchFaceTimer();
 
 // Font -----------------------------------------------------------
 
@@ -32,7 +33,8 @@ GFont Font_LoadSystem(const char * font_key);
 
 // Label -----------------------------------------------------------
 
-TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, GTextAlignment alignment, const char * fontName);
+TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, 
+                      GTextAlignment alignment, const char * fontName);
 void Label_SetText(TextLayer * label, const char * text);
 void Label_Destructor(TextLayer * label);
 void Label_SetFont(TextLayer * label, GFont font);
