@@ -16,14 +16,14 @@ Form mainForm;
 
     Label lblMsg;
     Label lblTime;
-    Timer _timer = NULL;
+    Timer tmrMain;
     
-    private void _timer_Tick(void * data)  {
+    private void tmrMain_Tick(void * data)  {
         
         static char timeBuffer [8+1];
         struct tm *tick_time = DateTime_Now();
         
-        // Format %T HH:MM:SS
+        // Format %T -> HH:MM:SS -- http://www.cplusplus.com/reference/ctime/strftime
         Label_SetText(lblTime, StringFormatTime(tick_time, "%T", timeBuffer));
     }
     private void mainForm_Load(Window *window) {
@@ -36,7 +36,7 @@ Form mainForm;
         Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         Form_AddLabel(mainForm, lblTime);
         
-        _timer = Form_StartTimer(mainForm, 1000, _timer_Tick);
+        tmrMain = Form_StartTimer(mainForm, 1000, tmrMain_Tick);
     }
     private void mainForm_Unload(Window *window) {
         

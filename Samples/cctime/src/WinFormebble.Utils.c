@@ -131,32 +131,32 @@ unsigned long int strtoul(const char *nptr, char **endptr, int base) {
   while (1) {
     if (isdigit((unsigned char)*nptr)) {
       if (base == 0) {
-	if (*nptr == '0') {
-	  base = 8;
-	} else {
-	  base = 10;
-	  undecided = 0;
-	}
+  if (*nptr == '0') {
+    base = 8;
+  } else {
+    base = 10;
+    undecided = 0;
+  }
       }
       x = x * base + (*nptr - '0');
       nptr++;
     } else if (isalpha((unsigned char)*nptr)) {
       if ((*nptr == 'X') || (*nptr == 'x')) {
-	if ((base == 0) || ((base == 8) && undecided)) {
-	  base = 16;
-	  undecided = 0;
-	  nptr++;
-	} else if (base == 16) {
-	  /* hex values are allowed to have an optional 0x */
-	  nptr++;
-	} else {
-	  break;
-	}
+  if ((base == 0) || ((base == 8) && undecided)) {
+    base = 16;
+    undecided = 0;
+    nptr++;
+  } else if (base == 16) {
+    /* hex values are allowed to have an optional 0x */
+    nptr++;
+  } else {
+    break;
+  }
       } else if (base <= 10) {
-	break;
+  break;
       } else {
-	x = x * base + (toupper((unsigned char)*nptr) - 'A') + 10;
-	nptr++;
+  x = x * base + (toupper((unsigned char)*nptr) - 'A') + 10;
+  nptr++;
       }
     } else {
       break;
@@ -208,6 +208,9 @@ char *StringFormat2(char * format, char * buffer, int bufferSize, ...) {
 /*
  * Datetime Method
  * http://www.epochconverter.com/
+ * To do: Create a DateTime define for struct tm *
+ * and a DateTime_Destructor(***) and all DateTime_New should do a
+ * malloc
  */
 
 private struct tm * DateTime_Now_NonReEntrant() {
@@ -219,7 +222,7 @@ private struct tm * DateTime_Now_NonReEntrant() {
 
 struct tm * DateTime_Now() {
     
-    static struct tm DateTime_tick_time; // Not ReEntrant
+    static struct tm DateTime_tick_time; // TODO: Not ReEntrant
     memcpy(&DateTime_tick_time, DateTime_Now_NonReEntrant(), sizeof(struct tm));
     return &DateTime_tick_time;
 }
@@ -293,133 +296,133 @@ char *__StringFormatTime(struct tm *tick_time, char * format, char * buffer, int
 
 /* ============== DARRAY ================== */
 /*
-	darray - Dynamic array for C based on darray.h from https://gist.github.com/dce/5187025 - David Eisinger
-	Modified by Frederic Torres 2014
+  darray - Dynamic array for C based on darray.h from https://gist.github.com/dce/5187025 - David Eisinger
+  Modified by Frederic Torres 2014
 */
 
 DArray * darray_init() {
 
-	DArray *array;
-	array = (PDArray)malloc(sizeof(DArray));
-	array->last = -1;
-	array->size = 16;
-	array->data = (PDatatArray)calloc(array->size, sizeof(void *));
-	
-	for (int i = 0; i < array->size; i++) {
-		array->data[i] = NULL;
-	}
-	return array;
+  DArray *array;
+  array = (PDArray)malloc(sizeof(DArray));
+  array->last = -1;
+  array->size = 16;
+  array->data = (PDatatArray)calloc(array->size, sizeof(void *));
+  
+  for (int i = 0; i < array->size; i++) {
+    array->data[i] = NULL;
+  }
+  return array;
 }
 
 void darray_resize(DArray *array, int size) {
 
-	array->data = (PDatatArray)realloc(array->data, size * sizeof(void *));
-	array->size = size;
+  array->data = (PDatatArray)realloc(array->data, size * sizeof(void *));
+  array->size = size;
 
-	for (int i = array->last+1; i < array->size; i++) {
-		array->data[i] = NULL;
-	}
+  for (int i = array->last+1; i < array->size; i++) {
+    array->data[i] = NULL;
+  }
 }
 
 void * darray_get(DArray *array, int index) {
 
-	return array->data[index];
+  return array->data[index];
 }
 
 void darray_free(DArray *array) {
 
-	int i = array->last;
+  int i = array->last;
 
-	while (i >= 0) {
+  while (i >= 0) {
 
-		void * ptr = darray_get(array, i);
-		if (ptr != NULL) {
-			free(ptr);
-		}
-		i--;
-	}
-	free(array);
+    void * ptr = darray_get(array, i);
+    if (ptr != NULL) {
+      free(ptr);
+    }
+    i--;
+  }
+  free(array);
 }
 
 void darray_set(DArray *array, int index, void *value) {
 
-	int new_size = array->size;
+  int new_size = array->size;
 
-	while (index > (new_size - 1)) {
-		new_size *= 2;
-	}
+  while (index > (new_size - 1)) {
+    new_size *= 2;
+  }
 
-	if (new_size != array->size) {
-		darray_resize(array, new_size);
-	}
+  if (new_size != array->size) {
+    darray_resize(array, new_size);
+  }
 
-	array->data[index] = value;
+  array->data[index] = value;
 
-	if (index > array->last) {
-		array->last = index;
-	}
+  if (index > array->last) {
+    array->last = index;
+  }
 }
 
 void darray_push(DArray *array, void *value) {
 
-	array->last++;
+  array->last++;
 
-	if (array->last == array->size) {
-		darray_resize(array, array->size * 2);
-	}
-	array->data[array->last] = value;
+  if (array->last == array->size) {
+    darray_resize(array, array->size * 2);
+  }
+  array->data[array->last] = value;
 }
 
 void * darray_pop(DArray *array) {
 
-	void *value;
-	value = darray_get(array, array->last);
-	darray_set(array, array->last, NULL);
-	array->last--;
-	return value;
+  void *value;
+  value = darray_get(array, array->last);
+  darray_set(array, array->last, NULL);
+  array->last--;
+  return value;
 }
 
 DArray * darray_radix_sort(DArray *array) {
 
-	DArray *buckets, *bucket;
-	int *val, i, j, cur, mask, sortval, sorted;
+  DArray *buckets, *bucket;
+  int *val, i, j, cur, mask, sortval, sorted;
 
-	buckets = darray_init();
+  buckets = darray_init();
 
-	mask = 1;
+  mask = 1;
 
-	do {
-		sorted = 1;
+  do {
+    sorted = 1;
 
-		// reset the buckets
-		for (i = 0; i < 10; i++) {
-			darray_set(buckets, i, darray_init());
-		}
+    // reset the buckets
+    for (i = 0; i < 10; i++) {
+      darray_set(buckets, i, darray_init());
+    }
 
-		// sort the values into buckets
-		for (i = 0; i <= (array->last); i++) {
-			val = (int*)darray_get(array, i);
-			sortval = (*val / mask) % 10;
-			if (sortval > 0) { sorted = 0; }
-			darray_push((PDArray)darray_get(buckets, sortval), val);
-		}
+    // sort the values into buckets
+    for (i = 0; i <= (array->last); i++) {
+      val = (int*)darray_get(array, i);
+      sortval = (*val / mask) % 10;
+      if (sortval > 0) { sorted = 0; }
+      darray_push((PDArray)darray_get(buckets, sortval), val);
+    }
 
-		// rebuild array
-		cur = 0;
+    // rebuild array
+    cur = 0;
 
-		for (i = 0; i < 10; i++) {
-			bucket = (PDArray)darray_get(buckets, i);
+    for (i = 0; i < 10; i++) {
+      bucket = (PDArray)darray_get(buckets, i);
 
-			for (j = 0; j <= (bucket->last); j++) {
-				darray_set(array,
-					cur++,
-					darray_get(bucket, j));
-			}
-		}
+      for (j = 0; j <= (bucket->last); j++) {
+        darray_set(array,
+          cur++,
+          darray_get(bucket, j));
+      }
+    }
 
-		mask *= 10;
+    mask *= 10;
 
-	} while (!sorted);
+  } while (!sorted);
 
-	return array;
+  return array;
 }

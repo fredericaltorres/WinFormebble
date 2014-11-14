@@ -9,6 +9,12 @@
  * Images
  *   Pebble Image https://github.com/pebble/PebbleUI
  * Licence: MIT
+ *
+ * TODO
+ * - Create DateTime type with allocation on the head and DateTime_Destructor
+ * - Create Memory Object manager that would free all allocated object like a DateTime
+ * - Add support for image
+ * - Add support for Yes/No Message box
  */
 #include <pebble.h>
 #include "WinFormebble.h"
@@ -49,11 +55,11 @@ void Form_UnregisterWatchFaceTimer() {
  */    
 ControlInfo* ControlInfo_NewInstance(ControlTypeEnum controlType, void* control) {
 
-	ControlInfo* i;
-	i              = (ControlInfo*)malloc(sizeof(ControlInfo));
-	i->ControlType = controlType;
-	i->Control     = control;
-	return i;
+    ControlInfo* i;
+    i              = (ControlInfo*)malloc(sizeof(ControlInfo));
+    i->ControlType = controlType;
+    i->Control     = control;
+    return i;
 }
 Form Form_New() {
     Form f = (Form)malloc(sizeof(FormStruct));
@@ -316,17 +322,17 @@ void Menu_Destructor(MenuLayer *menuLayer) {
 
 
    /** 
-	 * ControlInfo Clode File
-	 * Array Class: ControlInfo
-	 * Generated Code based on the darray.c library 
-	 */
+     * ControlInfo Clode File
+     * Array Class: ControlInfo
+     * Generated Code based on the darray.c library 
+     */
 
-	DArray*      ControlInfo_New       ()                                           { return darray_init();                               }
-	void         ControlInfo_Push      (DArray *array, ControlInfo *s)              { darray_push(array, s);                              }
-	ControlInfo* ControlInfo_Pop       (DArray *array)                              { return (ControlInfo *)darray_pop(array);        }        
-	ControlInfo* ControlInfo_Get       (DArray *array, int index)                   { return (ControlInfo *)darray_get(array, index); } 
-	void         ControlInfo_Set       (DArray *array, int index, ControlInfo *s)   { darray_set(array, index, s);                        }
-	void         ControlInfo_Destructor(DArray *array)                              { darray_free(array);                                 }
+    DArray*      ControlInfo_New       ()                                           { return darray_init();                               }
+    void         ControlInfo_Push      (DArray *array, ControlInfo *s)              { darray_push(array, s);                              }
+    ControlInfo* ControlInfo_Pop       (DArray *array)                              { return (ControlInfo *)darray_pop(array);        }        
+    ControlInfo* ControlInfo_Get       (DArray *array, int index)                   { return (ControlInfo *)darray_get(array, index); } 
+    void         ControlInfo_Set       (DArray *array, int index, ControlInfo *s)   { darray_set(array, index, s);                        }
+    void         ControlInfo_Destructor(DArray *array)                              { darray_free(array);                                 }
     int          ControlInfo_GetLength (DArray *array)                              { return array->last; }
             
 
@@ -370,13 +376,13 @@ void jsCom_SendMessage(uint8_t key) {
 }
 void jsCom_SendIntMessage(uint8_t key, uint8_t cmd) {
     
-	DictionaryIterator *iter;
- 	app_message_outbox_begin(&iter);
- 	
- 	Tuplet value = TupletInteger(key, cmd);
- 	dict_write_tuplet(iter, &value);
- 	
- 	app_message_outbox_send();
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    
+    Tuplet value = TupletInteger(key, cmd);
+    dict_write_tuplet(iter, &value);
+    
+    app_message_outbox_send();
 }
 bool jsCom_SendStringMessage(int key, char *text) {
     
