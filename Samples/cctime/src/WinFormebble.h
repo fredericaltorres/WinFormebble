@@ -103,5 +103,8 @@ void Menu_Destructor(Menu menu);
 #define Trace_TraceDebug(fmt, args...)  app_log(APP_LOG_LEVEL_DEBUG, __FILE_NAME__, __LINE__, fmt, ## args)
 #define Trace_TraceInformationVerbose(fmt, args...)  app_log(APP_LOG_LEVEL_DEBUG_VERBOSE, __FILE_NAME__, __LINE__, fmt, ## args)
 
-
+void jsCom_Initialize();
+void jsCom_SendMessage(uint8_t key);
+void jsCom_SendIntMessage(uint8_t key, uint8_t cmd);
+bool jsCom_SendStringMessage(int key, char *text);
 

@@ -4,6 +4,10 @@
  *
  * (C) Torres Frederic 2014
  *
+ * Tutorials
+ *   http://ninedof.wordpress.com/pebble-sdk-tutorial/
+ * Images
+ *   Pebble Image https://github.com/pebble/PebbleUI
  * Licence: MIT
  */
 #include <pebble.h>
@@ -39,23 +43,6 @@ void Form_UnregisterWatchFaceTimer() {
     
     tick_timer_service_unsubscribe();
 }
-
-/*
- * App Timer
- */
-
-/*
-AppTimer * AppTimer_Register(uint32_t timeout_ms, AppTimerCallback callback, void * callback_data) {
-    
-    _AppTimer_Hanlder = callback;
-    _AppTimer_Timeout = timeout_ms;
-    return app_timer_register(_AppTimer_Timeout, __AppTimer_Hanlder__, callback_data);
-}
-void AppTimer_Unregister(AppTimer * timerHandle) {
-    
-    app_timer_cancel(timerHandle);
-}*/
-
 
 /*
  *     Form Methods
@@ -323,17 +310,8 @@ void Menu_Destructor(MenuLayer *menuLayer) {
  * Trace
  */    
 
-//#define Trace_TraceError(fmt, args...) 
-//#define Trace_TraceInformation(fmt, args...) 
-//#define Trace_TraceWarning(fmt, args...) 
-//#define Trace_TraceDebug(fmt, args...)  
-//#define Trace_TraceInformationVerbose(fmt, args...) 
-
 /*
-    Tutorials
-    http://ninedof.wordpress.com/pebble-sdk-tutorial/
-    Images
-    Pebble Image https://github.com/pebble/PebbleUI
+    
 */
 
 
@@ -351,3 +329,73 @@ void Menu_Destructor(MenuLayer *menuLayer) {
 	void         ControlInfo_Destructor(DArray *array)                              { darray_free(array);                                 }
     int          ControlInfo_GetLength (DArray *array)                              { return array->last; }
             
+
+/*
+ * JsCom Module
+ */
+   
+static AppMessageInboxReceived _received_callback;
+
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+    
+    if(_received_callback != NULL) { // Call user callback if defined
+        _received_callback(iterator, context);
+    }
+}
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+    //APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+void jsCom_Initialize(AppMessageInboxReceived received_callback) {
+    
+    _received_callback = received_callback;
+    
+    // Register internal callback
+    app_message_register_inbox_received(inbox_received_callback);
+    app_message_register_inbox_dropped(inbox_dropped_callback);
+    app_message_register_outbox_failed(outbox_failed_callback);
+    app_message_register_outbox_sent(outbox_sent_callback);
+    
+    // Open AppMessage
+    app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
+}
+void jsCom_SendMessage(uint8_t key) {
+    
+     jsCom_SendIntMessage(key, 0);
+}
+void jsCom_SendIntMessage(uint8_t key, uint8_t cmd) {
+    
+	DictionaryIterator *iter;
+ 	app_message_outbox_begin(&iter);
+ 	
+ 	Tuplet value = TupletInteger(key, cmd);
+ 	dict_write_tuplet(iter, &value);
+ 	
+ 	app_message_outbox_send();
+}
+bool jsCom_SendStringMessage(int key, char *text) {
+    
+    if ((key == -1) && (text == NULL)) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "no data to send");
+        // well, the "nothing" that was sent to us was queued, anyway ...
+        return true;
+    }
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+    if (iter == NULL) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "null iter");
+        return false;
+    }
+    Tuplet tuple = (text == NULL) ? TupletInteger(key, 1) : TupletCString(key, text);
+    dict_write_tuplet(iter, &tuple);
+    dict_write_end(iter);
+    
+    app_message_outbox_send();
+    return true;
+}
+
