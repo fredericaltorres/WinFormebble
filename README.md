@@ -6,6 +6,8 @@ WinFormebble
 WinFormebble is a C librarary to program the Pebble smart watch
 that is friendly to C# and WinForm developer.
 
+**** This library is in ALPHA mode.***
+
 # To Do
 
 - Implement a mini memory manager
