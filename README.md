@@ -8,6 +8,10 @@ that is friendly to C# and WinForm developer.
 
 **** This library is in ALPHA mode.***
 
+# Contact
+
+    Creator: FredericALTorres@gmail.com
+
 # To Do
 
 - Implement a mini memory manager
