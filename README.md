@@ -11,6 +11,7 @@ that is friendly to C# and WinForm developer.
 # Contact
 
     Creator: FredericALTorres@gmail.com
+    http://forums.getpebble.com/discussion/18161/pebble-for-c-and-winform-developer?new=1
 
 # To Do
 
