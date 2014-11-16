@@ -18,7 +18,6 @@
 #include <pebble.h>  
 #include <pebble_fonts.h>
 #include "WinFormebble.h"
-#include "jsCom.h"
 
 // Api data returned from JavaScript World to C world
 // Dictionary properties used in communication with Pebble iOS App
@@ -66,23 +65,23 @@ Form mainForm;
         
         lblDate = Label_New(GRect(0, 8, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblDate, NOT_INITIALIZED);
-        Form_AddLabel(&mainForm, lblDate);
+        Form_AddLabel(mainForm, lblDate);
         
         lblMonth = Label_New(GRect(0, 33, 144, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblMonth, NOT_INITIALIZED);
-        Form_AddLabel(&mainForm, lblMonth);
+        Form_AddLabel(mainForm, lblMonth);
         
         lblTime = Label_New(GRect(5, 55, 139, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_BOLD_SUBSET_49);
         Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
-        Form_AddLabel(&mainForm, lblTime);
+        Form_AddLabel(mainForm, lblTime);
         
         lblWeather = Label_New(GRect(0, 110, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblWeather, LOADING);
-        Form_AddLabel(&mainForm, lblWeather);
+        Form_AddLabel(mainForm, lblWeather);
         
         lblLocation = Label_New(GRect(0, 134, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
         Label_SetText(lblLocation, NOT_INITIALIZED);
-        Form_AddLabel(&mainForm, lblLocation);
+        Form_AddLabel(mainForm, lblLocation);
     }
     private void mainForm_Unload(Window *window) {
         
@@ -188,18 +187,15 @@ Form mainForm;
 
 int main(void) { 
     
-    Form_New(&mainForm, mainForm_Load, mainForm_Unload);
+    mainForm = Form_New();
+    Form_Initialize(mainForm, mainForm_Load, mainForm_Unload);
+    Form_Show(mainForm);
+    mainForm_UpdateTime();
     jsCom_Initialize(mainForm_InboxReceivedCallback);
     Form_RegisterWatchFaceTimer(MINUTE_UNIT, mainForm_EveryMinuteTimer);    
-    mainForm_UpdateTime();
         
     app_event_loop();
     
-    Form_Destructor(&mainForm);  // Also clean all associated controls
+    Form_Destructor(mainForm);  // Also clean all associated controls
+    
 }
-
-//Trace_TraceError("HELLO WORLDISH %d", 1);
-//Trace_TraceInformation("HELLO WORLDISH %d", 2);
-//Trace_TraceWarning("HELLO WORLDISH %d", 3);
-//Trace_TraceDebug("HELLO WORLDISH %d", 4);    
-//jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);    
