@@ -54,6 +54,15 @@ void Menu_Destructor(Menu menu);
 #define Trace_TraceDebug(fmt, args...)  
 #define Trace_TraceInformationVerbose(fmt, args...)
 
+// Local Storge On The Watch ---------------------------------------
+
+localDB()->GetBool(int key);
+localDB()->GetInt(int key);
+localDB()->GetString(int key, char* buffer, int maxBuffer);
+localDB()->SetBool(int key, bool val);
+localDB()->SetInt(int key, int val);
+localDB()->SetString(int key, char* val);
+localDB()->Delete(int key);
 ```
 
 
