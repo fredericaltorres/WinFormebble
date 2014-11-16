@@ -426,3 +426,50 @@ DArray * darray_radix_sort(DArray *array) {
 
   return array;
 }
+
+/* ============== localDB Singleton ================== */
+/*
+	Allow to access the local storage on the PEBBLE Watch.
+    Offer an OO syntax 
+    http://developer.getpebble.com/guides/pebble-apps/app-structure/persistent-storage/
+*/
+LOCALDB_CLASS __localDbInstance; // Singleton instance
+// Singleton implementation
+bool __getBool(int key) { 
+    return  persist_read_bool(key);
+}
+int  __getInt(int key) {
+    return persist_read_int(key);
+}
+char*__getString(int key, char* buffer, int maxBuffer) { 
+    memset(buffer,0,sizeof(buffer));
+    persist_read_string(key, buffer, maxBuffer);    
+    return buffer;
+}
+void __setBool(int key, bool val) { 
+      persist_write_bool(key, val);
+}
+void __setInt(int key, int val) { 
+    persist_write_int(key, val);
+}
+void __setString(int key, char* val) { 
+    persist_write_string(key, val);
+}
+void __delete(int key) { 
+    persist_delete(key);
+}
+
+LOCALDB localDB() {
+
+	if (__localDbInstance.GetBool == NULL) {
+
+		__localDbInstance.GetBool   = __getBool;
+		__localDbInstance.GetInt    = __getInt;
+		__localDbInstance.GetString = __getString;
+		__localDbInstance.SetBool   = __setBool;
+		__localDbInstance.SetInt    = __setInt;
+		__localDbInstance.SetString = __setString;
+        __localDbInstance.Delete    = __delete;
+	}
+	return &__localDbInstance;
+}

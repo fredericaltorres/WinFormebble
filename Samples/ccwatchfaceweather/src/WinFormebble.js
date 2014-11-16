@@ -13,6 +13,17 @@
 var GEOLOCATION_TIMEOUT     = 15000;
 var GEOLOCATION_MAXIMUM_AGE = 60000;
 
+var trace = function(s) {
+    var timeStamp = (new Date()).toLocaleTimeString();
+    console.log(timeStamp+' [INFO] '+s);
+};
+var Trace = trace; // For compatibility reason TODO: Should be removed
+
+var traceError = function(s) {
+    var timeStamp = (new Date()).toLocaleTimeString();
+    console.log(timeStamp+' [ERROR] '+s);
+};
+
 var Trace = function(s) {
     var timeStamp = (new Date()).toLocaleTimeString();
     console.log(timeStamp+' '+s);

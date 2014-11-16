@@ -71,3 +71,23 @@ void*   darray_pop       (DArray *array);
 DArray* darray_radix_sort(DArray *array);
 
 
+/* ============== localDB Singleton ================== */
+/*
+    Allow to access the local storage on the PEBBLE Watch.
+    Offer an OO syntax
+    http://developer.getpebble.com/guides/pebble-apps/app-structure/persistent-storage/
+*/
+typedef struct  {
+	void(*SetBool)  (int key, bool val);
+	void(*SetInt)   (int key, int val);
+	void(*SetString)(int key, char* val);
+    void(*Delete)   (int key);
+
+	bool (*GetBool)  (int key);
+	int  (*GetInt)   (int key);
+	char*(*GetString)(int key, char* buffer, int maxBuffer);    
+} LOCALDB_CLASS;
+
+#define LOCALDB LOCALDB_CLASS*
+    
+LOCALDB localDB();
