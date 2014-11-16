@@ -37,7 +37,7 @@ function sendCommand(key) {
     }
     param     = URL_JSON_PARAM.replace("[KEY]", keyValue);
     var url   = URL.replace('[IP]', computerIp);
-    Trace(url + param);
+    trace(url + param);
     url      += encodeURIComponent(param);
     
     httpGet(url,
@@ -52,12 +52,12 @@ function Init() {
     
     Pebble.addEventListener('ready',  // Listen for when the watchface is opened
         function(e) {
-            Trace("App started, connected:{0}, Browser Agent:{1}".format(e.ready, navigator.userAgent));
+            trace("App started, connected:{0}, Browser Agent:{1}".format(e.ready, navigator.userAgent));
         }
     );    
     Pebble.addEventListener('appmessage', // Listen for when an AppMessage is received
         function(e) {
-            Trace("Requested From App:"+JSON.stringify(e.payload));
+            trace("Requested From App:"+JSON.stringify(e.payload));
             sendCommand(e.payload.KEY_REQUEST_ID);
         }
     );
@@ -65,17 +65,17 @@ function Init() {
     var AppConfigurationUrl = "https://dl.dropboxusercontent.com/u/6376212/Pebble.Configuration.winRemoteControl.html";
     Pebble.addEventListener("showConfiguration",
         function(e) {
-            Trace("Opening Config app:{0}".format(AppConfigurationUrl))
+            trace("Opening Config app:{0}".format(AppConfigurationUrl))
             Pebble.openURL(AppConfigurationUrl);
         }
     );
     Pebble.addEventListener("webviewclosed",
         function(e) {
-            Trace("Closing Config App:");
-            Trace("  Config :{0}".format(e.response));
+            trace("Closing Config App:");
+            trace("  Config :{0}".format(e.response));
             if(e.response) {
                 var configuration = JSON.parse(decodeURIComponent(e.response));
-                Trace("  Config :{0}".format(JSON.stringify(configuration)));
+                trace("  Config :{0}".format(JSON.stringify(configuration)));
                 localStorage.setItem("ComputerIp", configuration.ComputerIp);
                 sendMessageToWatch(
                     {
@@ -86,7 +86,7 @@ function Init() {
                 );
             }
             else {
-                Trace("No data was send from the config app");
+                trace("No data was send from the config app");
             }
         }
     );    
