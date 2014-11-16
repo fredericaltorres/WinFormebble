@@ -1,0 +1,23 @@
+{
+    "appKeys": {
+        "KEY_COMPUTER_IP": 1,
+        "KEY_REQUEST_ID": 0
+    },
+    "capabilities": [
+        "location",
+        "configurable"
+    ],
+    "companyName": "FredericALTorres",
+    "longName": "winRemoteControlPebble",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "shortName": "winRemoteControlPebble",
+    "uuid": "54d1382c-33cc-49fe-bbbb-f19c8b344947",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}

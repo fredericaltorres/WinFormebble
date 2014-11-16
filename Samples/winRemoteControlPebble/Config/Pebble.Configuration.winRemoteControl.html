@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>winRemoteControl Client For PEBBLE Watch</title>
+</head>
+<body style="font-size:150%;">
+
+    <h2>PowerPoint Controller</h2>
+    <p>Computer Ip: <input type="text" size="12" id="ComputerIp" style="font-size:135%;"></p>
+    <p><button id="save_button" style="font-size:135%;">Save</button></p>
+    
+    <script>
+        function trace(s) {
+            var timeStamp = (new Date).toString();
+            console.log("[CONFIG]"+timeStamp+' '+ s);
+        }
+        function sendConfigFileToPebbleApp(config) {
+
+            var location      = "pebblejs://close#" + encodeURIComponent(JSON.stringify(config));
+            trace("sendConfigFileToPebbleApp config:"+JSON.stringify(config));
+            trace("sendConfigFileToPebbleApp url:"+location);
+            document.location = location;
+        }
+        function getOptionsDictionary() {
+            return {
+                "ComputerIp": document.getElementById("ComputerIp").value
+            }
+        }
+        function main() {
+
+            trace("Start CONFIG APP");
+
+            var computerIp = localStorage.getItem("ComputerIp");
+            var computerIpTextBox = document.getElementById("ComputerIp");
+            document.getElementById("ComputerIp").value = computerIp;
+
+            document.getElementById("save_button").addEventListener("click",
+                function() {
+                    var options = getOptionsDictionary();
+                    trace("CONFIG_APP about to send data back:"+JSON.stringify(options));
+                    localStorage.setItem("ComputerIp", options.ComputerIp);
+                    sendConfigFileToPebbleApp(options);
+                },
+                false
+            );
+        }
+        main();
+    </script>
+</body>
+</html>
