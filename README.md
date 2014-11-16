@@ -8,10 +8,12 @@ that is friendly to C# and WinForm developer.
 
 # To Do
 
-- Implement a mini memory manager/
+- Implement a mini memory manager
 - Associate to Label a buffer managed by the memory manager
 - Add Image Control
 - Add MessageBox Yes/no support
+- Label associated with Form, should be really local to the form (I am not shure how)
+    - Support multiple dialog with the same label name
 
 # Api Overview
 
