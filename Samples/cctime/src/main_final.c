@@ -8,11 +8,11 @@
 #include <pebble.h>  
 #include <pebble_fonts.h>
 #include "WinFormebble.h"
-#include "jsCom.h"
+
 
 // Constants
 #define WATCH_DIGIT_BUFFER "00:00"   
-#define CODE_CAMP_22_DAY 2014, 11, 22, 0, 0, 0        
+#define CODE_CAMP_22_DAY 2014, 11, 22, 0, 0, 0
 #define DEFAULT_STRING_BUFFER_SIZE 16    
     
 Form mainForm;
@@ -22,31 +22,33 @@ Form mainForm;
     Label lblWaitTimeInHours;
     Label lblTime2;
 
-    private void mainForm_UpdateUI() {    
-                
+    private void mainForm_Timer(struct tm *tick_time, TimeUnits units_changed) {       
+        
         static char timeBuffer    [DEFAULT_STRING_BUFFER_SIZE];
         static char dateBuffer    [DEFAULT_STRING_BUFFER_SIZE];
+     
+        struct tm * now = DateTime_Now();
+        
+        // http://www.cplusplus.com/reference/ctime/strftime
+        Label_SetText(lblDate,   StringFormatTime(now, "%a - %b %d", dateBuffer));
+        Label_SetText(lblTime2,  StringFormatTime(now, "%T", timeBuffer));
+        
         static char msgBufferDays [DEFAULT_STRING_BUFFER_SIZE*2];
         static char msgBufferHours[DEFAULT_STRING_BUFFER_SIZE*2];
-        
-        struct tm * now       = DateTime_Now();
+     
         struct tm * eventDay  = DateTime(CODE_CAMP_22_DAY);
+        
         int waitTimeInDays    = DateTime_Diff('d', now, eventDay);
         int waitTimeInHours   = DateTime_Diff('h', now, eventDay);
-                
-        Label_SetText(lblDate,  StringFormatTime(now, "%a - %b %d", dateBuffer));
-        Label_SetText(lblTime2,  StringFormatTime(now, "%H:%M", timeBuffer));
         
         StringFormat(AsBuffer(msgBufferDays), "%d days to CC", waitTimeInDays);
         Label_SetText(lblWaitTimeInDays, msgBufferDays);
         
         StringFormat(AsBuffer(msgBufferHours), "%d hours to CC", waitTimeInHours); 
-        Label_SetText(lblWaitTimeInHours, msgBufferHours);       
+        Label_SetText(lblWaitTimeInHours, msgBufferHours); 
+                
     }
-    private void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
-        
-        mainForm_UpdateUI();         
-    }
+  
     private void mainForm_Load(Window *window) {
          
         int y = 10;
@@ -70,7 +72,7 @@ Form mainForm;
         Form_AddLabel(mainForm, lblWaitTimeInHours);
         y += 30;
         
-        Form_RegisterWatchFaceTimer(MINUTE_UNIT, mainForm_EveryMinuteTimer);
+        Form_RegisterWatchFaceTimer(SECOND_UNIT, mainForm_Timer);
     }
     private void mainForm_Unload(Window *window) {
         

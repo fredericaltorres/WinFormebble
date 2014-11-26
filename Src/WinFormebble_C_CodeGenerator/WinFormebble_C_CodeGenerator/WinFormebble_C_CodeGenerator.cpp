@@ -10,61 +10,166 @@
 #include "darray.h"
 #include "darray_unittests.h"
 
-/* ============== localDB Singleton ================== */
-/*
-Allow to access the local storage on the PEBBLE Watch.
-Offer an OO syntax
+/* ============== MemoryM  ==================
+
+	A memory manager for C
 */
-typedef struct  {
-	void(*SetBool)  (int key, bool val);
-	void(*SetInt)   (int key, int val);
-	void(*SetString)(int key, char* val);
 
-	bool (*GetBool)  (int key);
-	int  (*GetInt)  (int key);
-	char*(*GetString)  (int key);
-} LOCALDB_CLASS;
+// First implement a dynamic array to store all allocation
+typedef struct {
 
-#define LOCALDB LOCALDB_CLASS*
+	int size;
+	void * data;
+} MemoryAllocation;
 
-LOCALDB localDB();
+DArray*				MemoryAllocation_New                    ();
+void				MemoryAllocation_PushA                  (DArray *array, MemoryAllocation *s);
+void				MemoryAllocation_Push                   (DArray *array, int size, void *data);
+                    MemoryAllocation*	MemoryAllocation_Pop(DArray *array);
+                    MemoryAllocation*	MemoryAllocation_Get(DArray *array, int index);
+void                MemoryAllocation_Set                    (DArray *array, int index, MemoryAllocation *s);
+void                MemoryAllocation_Destructor             (DArray *array);
+int                 MemoryAllocation_GetLength              (DArray *array);
 
+DArray*				MemoryAllocation_New()                                              { return darray_init(); }
+void				MemoryAllocation_Push(DArray *array, int size, void *data)			{ 
+	MemoryAllocation* ma = (MemoryAllocation*)malloc(sizeof(MemoryAllocation)); 
+	ma->data = data;
+	ma->size = size;
+	MemoryAllocation_PushA(array, ma); 
+}
+void				MemoryAllocation_PushA(DArray *array, MemoryAllocation *s)          { darray_push(array, s); }
+MemoryAllocation*	MemoryAllocation_Pop(DArray *array)                                 { return (MemoryAllocation *)darray_pop(array); }
+MemoryAllocation*	MemoryAllocation_Get(DArray *array, int index)                      { return (MemoryAllocation *)darray_get(array, index); }
+void				MemoryAllocation_Set(DArray *array, int index, MemoryAllocation *s) { darray_set(array, index, s); }
+void				MemoryAllocation_Destructor(DArray *array)                          { darray_free(array); }
+int					MemoryAllocation_GetLength(DArray *array)                           { return array->last; }
 
+typedef struct {
 
-LOCALDB_CLASS __localDbInstance;
+	DArray*	_memoryAllocation;
 
-bool __getBool  (int key)            { return true; }
-int  __getInt   (int key)            { return 122; }
-char*__getString(int key)            { return "aaa"; }
-void __setBool  (int key, bool val)  { }
-void __setInt   (int key, int val)   { }
-void __setString(int key, char* val) { }
+	bool*(*NewBool)();
+	int*(*NewInt)();
+	char*(*NewString)(int size);
+	char*(*String)(char* s);
+	char*(*GetReport)();
+	int(*GetMemoryUsed)();
+	void(*FreeAll)();
+	int(*GetCount)();
 
-LOCALDB localDB() {
+} MEMORYM_CLASS;
 
-	if (__localDbInstance.GetBool == NULL) {
+#define MEMORYM MEMORYM_CLASS*
 
-		__localDbInstance.GetBool   = __getBool;
-		__localDbInstance.GetInt    = __getInt;
-		__localDbInstance.GetString = __getString;
-		__localDbInstance.SetBool   = __setBool;
-		__localDbInstance.SetInt    = __setInt;
-		__localDbInstance.SetString = __setString;
+MEMORYM memoryM();
+
+MEMORYM_CLASS __localMemoryM;
+
+int __getCount() {
+
+	return MemoryAllocation_GetLength(__localMemoryM._memoryAllocation);
+}
+void* __newAlloc(int size) {
+	
+	void * d = malloc(size);
+	memset(d, 0, size);
+	MemoryAllocation_Push(__localMemoryM._memoryAllocation, size, d);
+	return d;
+}
+bool* __newBool() { 
+
+	return (bool*)__newAlloc(sizeof(bool));
+}
+int* __newInt() {
+
+	return (int*)__newAlloc(sizeof(int));
+}
+char* __newString(int size) {
+
+	return (char*)__newAlloc(size+1);
+}
+char* __String(char *s) {
+
+	int size = strlen(s);
+	char * newS = __newString(size+1);
+	strcpy(newS, s);
+	return newS;
+}
+void __freeAll  () {
+
+	// Free all registered memory allocation
+	int count = __getCount();
+	for (int i = 0; i <= count; i++) {
+
+		MemoryAllocation* ma = MemoryAllocation_Get(__localMemoryM._memoryAllocation, i);
+		free(ma->data);
 	}
-	return &__localDbInstance;
+	// Free the MemoryAllocation dynamic array
+	MemoryAllocation_Destructor(__localMemoryM._memoryAllocation);
+}
+char * __GetReport() {
+
+	char  buffer2[100];
+	char* buffer = __newString(1024 * 4);
+	int   count  = __getCount();
+	for (int i = 0; i <= count; i++) {
+
+		MemoryAllocation* ma = MemoryAllocation_Get(__localMemoryM._memoryAllocation, i);
+		sprintf(buffer2, "[%d] %d - %d\r\n", i, ma->size, ma->data);
+		strcat(buffer, buffer2);
+	}
+	return buffer;
+}
+int __GetMemoryUsed() {
+
+	int total = 0;
+	int count = __getCount();
+	for (int i = 0; i <= count; i++) {
+
+		MemoryAllocation* ma = MemoryAllocation_Get(__localMemoryM._memoryAllocation, i);
+		total += ma->size;
+	}
+	return total;
+}
+void __Initialize() {
+
+	__localMemoryM._memoryAllocation = MemoryAllocation_New();
+}
+
+MEMORYM memoryM() {
+
+	if (__localMemoryM.NewBool == NULL) {
+
+		__localMemoryM.NewBool       = __newBool;
+		__localMemoryM.NewInt        = __newInt;
+		__localMemoryM.NewString     = __newString;
+		__localMemoryM.FreeAll       = __freeAll;
+		__localMemoryM.GetCount      = __getCount;
+		__localMemoryM.String        = __String;
+		__localMemoryM.GetReport     = __GetReport;
+		__localMemoryM.GetMemoryUsed = __GetMemoryUsed;
+		
+		__Initialize();
+	}
+	return &__localMemoryM;
 }
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	localDB()->SetBool(0, true);
-	localDB()->SetInt(0, 112);
-	localDB()->SetString(0, "aa");
-	localDB()->GetBool(0);
-	localDB()->GetInt(0);
-	localDB()->GetString(0);
+	bool * b1 = memoryM()->NewBool();
+	bool * b2 = memoryM()->NewBool();
+	int  * i1 = memoryM()->NewInt();
+	int  * i2 = memoryM()->NewInt();
+	char * s1 = memoryM()->NewString(10);
+	char * s2 = memoryM()->NewString(100);
+	char * s3 = memoryM()->String("Hello World");
 
-	printf("running");
-	//test_darray_all();
+	printf(memoryM()->GetReport());
+	printf("Total Used %d", memoryM()->GetMemoryUsed());
+
+	memoryM()->FreeAll();
+		
 	return 0;
 }
 

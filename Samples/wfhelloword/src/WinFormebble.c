@@ -17,6 +17,8 @@
  * - Add support for Yes/No Message box
  */
 #include <pebble.h>
+
+//#define Form_TraceOn 1
 #include "WinFormebble.h"
     
 private int __WinFormebble__UniqueInt = 0;
@@ -64,7 +66,11 @@ ControlInfo* ControlInfo_NewInstance(ControlTypeEnum controlType, void* control)
 Form Form_New() {
     Form f = (Form)malloc(sizeof(FormStruct));
     f->_controlInfos = ControlInfo_New();
-    f->WindowHandle = window_create();
+    f->WindowHandle  = window_create();
+    
+    // Set the current form this is a temporary hack
+    // to retrieve all form as long as there are only 1
+    Form_Current     = f;
     return f;
 }
 void Form_Initialize(Form form, WindowHandler load, WindowHandler unload) {
@@ -98,6 +104,8 @@ void Form_Destructor(Form form) {
 }
 void Form_AddLabel(Form form, TextLayer * label) {
     
+    Form_Trace("Form_AddLabel %x", (unsigned int)label);
+
     layer_add_child(window_get_root_layer(form->WindowHandle), text_layer_get_layer(label));
     ControlInfo_Push(form->_controlInfos, ControlInfo_NewInstance(CONTROL_TYPE_LABEL, (void*)label));
 }
@@ -123,15 +131,18 @@ Timer Form_StartTimer(Form form, uint32_t timeout_ms, AppTimerCallback callback/
     //return app_timer_register(timeout_ms, callback, callback_data);
 }
 Timer Form_StopTimer(Timer timer) {    
+
     _AppTimer_On = false;
     //if(timer != NULL) { app_timer_cancel(timer); }
     return NULL;
 }
 Timer Form_ResumeTimer(Timer timer) {
+
     _AppTimer_On = true;
     return app_timer_register(_AppTimer_Timeout, __AppTimer_Hanlder__, NULL);
 }
 bool Form_IsTimerEnabled(Timer timer) {
+
     return _AppTimer_On;
 }
 
@@ -214,6 +225,12 @@ void Form_RegisterButtonHandlers(Form form, ClickHandler selectClickHandler, Cli
         __Button__Down__ClickHandler = downClickHandler;
     }
 }
+void Form_TraceMemoryReport() {
+
+    memoryM()->PushContext();
+    Trace_TraceDebug("MemoryM Report:\r\n%s", memoryM()->GetReport());
+    memoryM()->PopContext();
+}
 
 /*
  *     Label Methods
@@ -236,6 +253,7 @@ TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, GTextAlig
     if(fontName != NULL) {
         Label_SetSystemFont(label, fontName);
     }    
+    Form_Trace("Label_New %x", (unsigned int)label);
     return label;
 }
 /**
@@ -244,14 +262,34 @@ TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, GTextAlig
  */
 void Label_SetText(TextLayer * label, const char * text) {
     
-    text_layer_set_text(label, text);
+    Form_Trace("Label_SetText %x, text:%s", (unsigned int)label, text);
+    // Make a copy of the string and set the label
+    // The copy of the string is allocated by memoryM() and store in ControlInfo.Text
+    ControlInfo* c = ControlInfo_GetByControl(Form_Current->_controlInfos, (void*)label);
+    if(c == NULL) {
+        text_layer_set_text(label, "issue");
+    }
+    else {
+        /*
+            if(c->Text == NULL) {
+                c->Text = memoryM()->NewString((char*)text);
+            }
+            else {
+                c->Text = memoryM()->ReNewString((char*)text, c->Text);
+            }
+        */
+        c->Text = memoryM()->String((char*)text);
+        text_layer_set_text(label, c->Text);
+    }
 }
 void Label_Destructor(TextLayer * label) {
     
+    Form_Trace("Label_Destructor %x", (unsigned int)label);
     text_layer_destroy(label);  
 }
 void Label_SetFont(TextLayer * label, GFont font) {
     
+    Form_Trace("Label_Destructor %x", (unsigned int)label);
     text_layer_set_font(label, font);
 }
 
@@ -334,7 +372,24 @@ void Menu_Destructor(MenuLayer *menuLayer) {
     void         ControlInfo_Set       (DArray *array, int index, ControlInfo *s)   { darray_set(array, index, s);                        }
     void         ControlInfo_Destructor(DArray *array)                              { darray_free(array);                                 }
     int          ControlInfo_GetLength (DArray *array)                              { return array->last; }
+
+    // Get a control info based on the control (PEBBLE Control handler)
+    ControlInfo* ControlInfo_GetByControl(DArray *array, void* control) { 
+        
+        int len = ControlInfo_GetLength(array);
+        
+        for(int i = 0; i <= len; i++) {
             
+            ControlInfo* c = ControlInfo_Get(array, i);
+            if(ControlInfo_Get(array, i)->Control == control) {
+
+                Form_Trace("ControlInfo_GetByControl %x found", (unsigned int)control);
+                return c;
+            }
+        }
+        Form_Trace("ControlInfo_GetByControl %x not found", (unsigned int)control);
+        return NULL;
+    }
 
 /*
  * JsCom Module

@@ -18,6 +18,12 @@
 #define Menu MenuLayer *
 #define Timer AppTimer*
 
+#if defined(Form_TraceOn)
+    #define Form_Trace(fmt, args...) Trace_TraceDebug(fmt, ## args)
+#else
+    #define Form_Trace(fmt, args...)
+#endif
+
 private int __WinFormebble__GetNewUniqueInt();
 
     
@@ -30,7 +36,8 @@ typedef enum {
 typedef struct {
     
     ControlTypeEnum ControlType;
-    void * Control;
+    void * Control; // This is the PEBBLE SDK Control Handle
+    void * Text; // For a LABEL this is the text allocated by memoryM
     
 } ControlInfo;
 
@@ -43,6 +50,7 @@ void         ControlInfo_Set       (DArray *array, int index, ControlInfo *s);
 void         ControlInfo_Destructor(DArray *array);
 int          ControlInfo_GetLength (DArray *array);
 ControlInfo* ControlInfo_NewInstance(ControlTypeEnum controlType, void * control);
+ControlInfo* ControlInfo_GetByControl(DArray *array, void* control);
 
 typedef struct {
     
@@ -52,6 +60,10 @@ typedef struct {
 } FormStruct;
 
 #define Form FormStruct*
+    
+// Point to the current form
+// Temporary
+Form Form_Current;
 
 Form  Form_New();
 void  Form_Initialize(Form form, WindowHandler load, WindowHandler unload);
@@ -59,6 +71,7 @@ void  Form_Show(Form form);
 void  Form_Destructor(Form form);
 void  Form_AddLabel(Form form, TextLayer * label);
 void  Form_RegisterButtonHandlers(Form form, ClickHandler selectClickHandler, ClickHandler upClickHandler, ClickHandler downClickHandler);
+void  Form_TraceMemoryReport();
 Timer Form_StartTimer(Form form, uint32_t timeout_ms, AppTimerCallback callback/*, void * callback_data*/);
 Timer Form_StopTimer(Timer timer);
 Timer Form_ResumeTimer(Timer timer);

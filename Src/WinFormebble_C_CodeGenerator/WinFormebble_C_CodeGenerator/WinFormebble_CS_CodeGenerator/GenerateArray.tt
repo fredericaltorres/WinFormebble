@@ -1,7 +1,7 @@
 ﻿<#@ template language="C#" hostspecific="True"#>
 <#@include file="MultipleOutputHelper.ttinclude"#>
 <# var manager = Manager.Create(Host, GenerationEnvironment); #>
-<# string CLASS_NAMES = "TestStruct|ControlInfo"; #>
+<# string CLASS_NAMES = "MemoryAllocation"; #>
 
 <#/*  -- GENERATE THE H FILE --*/#>
 <# manager.StartNewFile("GeneratedArray.h"); #>
@@ -16,7 +16,7 @@
 	/**
 	 * <#=className #> Header File
 	 * Array Class: <#=className #>
-	 * Generated Code based on the darray.c library
+	 * Generated Code based on the darray.c library 
 	 */
 			 
 	typedef struct {

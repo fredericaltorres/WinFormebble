@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WinFormebble_C_CodeGenerato
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinFormebble_CS_CodeGenerator", "WinFormebble_C_CodeGenerator\WinFormebble_CS_CodeGenerator\WinFormebble_CS_CodeGenerator.csproj", "{66B105BD-EAD4-4C85-B290-FFC241E392AD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MemoryM", "..\MemoryM\MemoryM.vcxproj", "{772EDFB6-7239-405A-AE51-CAD8BF8E3512}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,16 @@ Global
 		{66B105BD-EAD4-4C85-B290-FFC241E392AD}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{66B105BD-EAD4-4C85-B290-FFC241E392AD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{66B105BD-EAD4-4C85-B290-FFC241E392AD}.Release|Win32.ActiveCfg = Release|Any CPU
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Debug|Win32.ActiveCfg = Debug|Win32
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Debug|Win32.Build.0 = Debug|Win32
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Release|Any CPU.ActiveCfg = Release|Win32
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Release|Win32.ActiveCfg = Release|Win32
+		{772EDFB6-7239-405A-AE51-CAD8BF8E3512}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

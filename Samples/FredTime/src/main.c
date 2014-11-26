@@ -64,24 +64,24 @@ Form mainForm;
         strcpy(_address, NOT_INITIALIZED);
         
         lblDate = Label_New(GRect(0, 8, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Label_SetText(lblDate, NOT_INITIALIZED);
         Form_AddLabel(mainForm, lblDate);
+        Label_SetText(lblDate, NOT_INITIALIZED);
         
         lblMonth = Label_New(GRect(0, 33, 144, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Label_SetText(lblMonth, NOT_INITIALIZED);
         Form_AddLabel(mainForm, lblMonth);
+        Label_SetText(lblMonth, NOT_INITIALIZED);
         
         lblTime = Label_New(GRect(5, 55, 139, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_BOLD_SUBSET_49);
-        Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         Form_AddLabel(mainForm, lblTime);
+        Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         
         lblWeather = Label_New(GRect(0, 110, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Label_SetText(lblWeather, LOADING);
         Form_AddLabel(mainForm, lblWeather);
+        Label_SetText(lblWeather, LOADING);
         
         lblLocation = Label_New(GRect(0, 134, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Label_SetText(lblLocation, NOT_INITIALIZED);
         Form_AddLabel(mainForm, lblLocation);
+        Label_SetText(lblLocation, NOT_INITIALIZED);
     }
     private void mainForm_Unload(Window *window) {
         
@@ -135,6 +135,8 @@ Form mainForm;
             
             jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
         }
+        _timerCount++;
+        Form_TraceMemoryReport();
     }
     private int CelsiusToFahrenheit(int v) {
         
@@ -192,10 +194,10 @@ int main(void) {
     Form_Show(mainForm);
     mainForm_UpdateTime();
     jsCom_Initialize(mainForm_InboxReceivedCallback);
-    Form_RegisterWatchFaceTimer(MINUTE_UNIT, mainForm_EveryMinuteTimer);    
+    Form_RegisterWatchFaceTimer(MINUTE_UNIT, mainForm_EveryMinuteTimer);
         
     app_event_loop();
     
-    Form_Destructor(mainForm);  // Also clean all associated controls
-    
+    memoryM()->FreeAll();
+    Form_Destructor(mainForm);  // Also clean all associated controls    
 }

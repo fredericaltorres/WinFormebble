@@ -8,7 +8,6 @@
 #include <pebble.h>  
 #include <pebble_fonts.h>
 #include "WinFormebble.h"
-#include "jsCom.h"
 
 // Constants
 #define WATCH_DIGIT_BUFFER "00:00"   
