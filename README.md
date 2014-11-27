@@ -6,6 +6,15 @@ WinFormebble
 WinFormebble is a C librarary to program the Pebble smart watch
 that is friendly to C# and WinForm developer.
 
+WinFormebble, use the memory manager library name [MemoryM](https://github.com/fredericaltorres/MemoryM).
+
+Text associated to label control are completely managed by MemoryM and
+do not not need to be freed.
+
+The method Form_Destructor() will free all control associated to the form.
+
+
+
 **** This library is in ALPHA mode.***
 
 # Contact
