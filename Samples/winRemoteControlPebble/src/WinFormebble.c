@@ -64,17 +64,23 @@ ControlInfo* ControlInfo_NewInstance(ControlTypeEnum controlType, void* control)
     return i;
 }
 Form Form_New() {
+
     Form f = (Form)malloc(sizeof(FormStruct));
     f->_controlInfos = ControlInfo_New();
     f->WindowHandle  = window_create();
     
     // Set the current form this is a temporary hack
     // to retrieve all form as long as there are only 1
-    Form_Current     = f;
+    Form_Current  = f;
+
+    Form_Trace("Form_New %x", (unsigned int)f->WindowHandle);
+
     return f;
 }
 void Form_Initialize(Form form, WindowHandler load, WindowHandler unload) {
     
+    Form_Trace("Form_Initialize %x", (unsigned int)form->WindowHandle);
+
     window_set_window_handlers(form->WindowHandle, (WindowHandlers)  {
         .load   = load,
         .unload = unload
@@ -82,16 +88,21 @@ void Form_Initialize(Form form, WindowHandler load, WindowHandler unload) {
     window_stack_push(form->WindowHandle, true);
 }
 void Form_Show(Form form) {
-    
+
+    Form_Trace("Form_Show %x", (unsigned int)form->WindowHandle);    
     window_stack_push(form->WindowHandle, true);
 }
 void Form_Destructor(Form form) { 
+
+    Form_Trace("Form_Destructor %x", (unsigned int)form->WindowHandle);
     
     for(int i=0; i<ControlInfo_GetLength(form->_controlInfos); i++) {
         
         ControlInfo *ci = ControlInfo_Get(form->_controlInfos, i);
         if(ci->ControlType == CONTROL_TYPE_LABEL) {
-            Label_Destructor((TextLayer*)ci->Control);
+
+            memoryM()->FreeAllocation(ci->Text); // Free text associated with label
+            Label_Destructor((TextLayer*)ci->Control); // Free label
         }
     }
     ControlInfo_Destructor(form->_controlInfos);
@@ -270,22 +281,14 @@ void Label_SetText(TextLayer * label, const char * text) {
         text_layer_set_text(label, "issue");
     }
     else {
-        /*
-            if(c->Text == NULL) {
-                c->Text = memoryM()->NewString((char*)text);
-            }
-            else {
-                c->Text = memoryM()->ReNewString((char*)text, c->Text);
-            }
-        */
-        c->Text = memoryM()->String((char*)text);
+        c->Text = memoryM()->ReNewString((char*)text, c->Text);
         text_layer_set_text(label, c->Text);
     }
 }
 void Label_Destructor(TextLayer * label) {
     
     Form_Trace("Label_Destructor %x", (unsigned int)label);
-    text_layer_destroy(label);  
+    text_layer_destroy(label);
 }
 void Label_SetFont(TextLayer * label, GFont font) {
     

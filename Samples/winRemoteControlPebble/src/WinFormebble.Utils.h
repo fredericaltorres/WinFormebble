@@ -102,8 +102,8 @@ LOCALDB localDB();
     Offer an OO syntax
     http://developer.getpebble.com/guides/pebble-apps/app-structure/persistent-storage/
 */
-
-/*
+ 
+ /*
 MemoryM
 A Simple memory manager for C.
 
@@ -117,11 +117,22 @@ WinFormebble (https://github.com/fredericaltorres/WinFormebble)
 #ifndef _MEMORYM_H_
 #define _MEMORYM_H_
 
-	#define MEMORYM_MAX_FORMATED_TEMP_STRING_SIZE 1024
-	#define MEMORYM_MAX_REPORT_SIZE (MEMORYM_MAX_FORMATED_TEMP_STRING_SIZE*4)
-	#define MEMORYM_TRUE "true"
-	#define MEMORYM_FALSE "false"
-	#define MEMORYM_STACK_CONTEXT_SIZE 4
+#if !defined(WINFORMEBBLE)
+
+    #include <stdlib.h>
+    #include <stdio.h>
+    #include <assert.h>
+    #include <time.h> 
+    #include <string.h>
+    #include "darray.h"
+
+#endif
+
+#define MEMORYM_MAX_FORMATED_TEMP_STRING_SIZE 1024
+#define MEMORYM_MAX_REPORT_SIZE (MEMORYM_MAX_FORMATED_TEMP_STRING_SIZE*4)
+#define MEMORYM_TRUE "true"
+#define MEMORYM_FALSE "false"
+#define MEMORYM_STACK_CONTEXT_SIZE 4
 
     /* ============== MemoryM  ==================
 
@@ -155,15 +166,17 @@ WinFormebble (https://github.com/fredericaltorres/WinFormebble)
 
         bool*(*NewBool       )();
         int *(*NewInt        )();
-        char*(*NewString     )(int size);
-        char*(*String        )(char* s);
+        char*(*NewStringX    )(int size);
+        char*(*NewString     )(char* s);
+        char*(*ReNewString   )(char* s, char* previousAllocation);
         char*(*Format        )(char* s, ...);
         char*(*GetReport     )();
         int  (*GetMemoryUsed )();
         void (*FreeAll       )();
         int  (*GetCount      )();
         bool (*FreeAllocation)(void* data);
-
+        int  (*Free)(int n, ...);
+        
         bool(*PushContext)();
         bool(*PopContext)();
 
@@ -174,6 +187,7 @@ WinFormebble (https://github.com/fredericaltorres/WinFormebble)
     MemoryManager* memoryM(); // Function that return the instance
 
 
-    char* __format(char *format, ...);
+    ///char* __format(char *format, ...);
 
-#endif
+
+    #endif

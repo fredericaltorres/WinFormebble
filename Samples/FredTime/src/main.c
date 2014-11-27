@@ -85,29 +85,29 @@ Form mainForm;
     }
     private void mainForm_Unload(Window *window) {
         
-       Trace_TraceDebug("-- mainForm_Load --"); 
+       Trace_TraceDebug("-- mainForm_Unload --"); 
     }  
     private void mainForm_UpdateTime() {    
+
+        char timeBuffer [DEFAULT_STRING_BUFFER_SIZE];
+        char dateBuffer [DEFAULT_STRING_BUFFER_SIZE];
+        char monthBuffer[DEFAULT_STRING_BUFFER_SIZE];
+        char newHour    [3];
         
         Trace_TraceDebug("-- mainForm_UpdateTime --");
+
+        struct tm * now = DateTime_Now();
         
-        time_t temp             = time(NULL);  // Get a tm structure
-        struct tm *tick_time    = localtime(&temp);
-        static char timeBuffer [DEFAULT_STRING_BUFFER_SIZE];
-        static char dateBuffer [DEFAULT_STRING_BUFFER_SIZE];
-        static char monthBuffer[DEFAULT_STRING_BUFFER_SIZE];
-        char newHour[3];
-        
-        // Vibrate a t the beginning of each hour
-        strcpy(newHour, StringFormatTime(tick_time, "%H", newHour));
+        // Vibrate at the beginning of each hour
+        strcpy(newHour, StringFormatTime(now, "%H", newHour));
         if(strcmp(_currentHour, newHour) != 0) {
             strcpy(_currentHour, newHour);
             vibes_short_pulse();
         }
             
-        Label_SetText(lblTime,  StringFormatTime(tick_time, clock_is_24h_style() ? "%H:%M" : "%I:%M", timeBuffer));
-        Label_SetText(lblDate,  StringFormatTime(tick_time, "%A", dateBuffer));
-        Label_SetText(lblMonth, StringFormatTime(tick_time, "%B %d", monthBuffer));
+        Label_SetText(lblTime,  StringFormatTime(now, clock_is_24h_style() ? "%H:%M" : "%I:%M", timeBuffer));
+        Label_SetText(lblDate,  StringFormatTime(now, "%A", dateBuffer));
+        Label_SetText(lblMonth, StringFormatTime(now, "%B %d", monthBuffer));
     }
     /**
      * showAddress
@@ -145,12 +145,12 @@ Form mainForm;
     } 
     private void mainForm_InboxReceivedCallback(DictionaryIterator *iterator, void *context) {
       
-        static char temperature[DEFAULT_STRING_BUFFER_SIZE]; // Must be static
-        static char conditions [DEFAULT_STRING_BUFFER_SIZE];
-        static char weather    [DEFAULT_STRING_BUFFER_SIZE];
-        int requestId = -1;
-        int tempCelsius = 0;
-        int vibrate = 0;
+        char * temperature = memoryM()->NewStringX(DEFAULT_STRING_BUFFER_SIZE);
+        char * conditions  = memoryM()->NewStringX(DEFAULT_STRING_BUFFER_SIZE);
+        char * weather     = memoryM()->NewStringX(DEFAULT_STRING_BUFFER_SIZE);
+        int requestId      = -1;
+        int tempCelsius    = 0;
+        int vibrate        = 0;
     
         Tuple * t = dict_read_first(iterator);
         while(t != NULL) {
@@ -180,6 +180,7 @@ Form mainForm;
         if(requestId == KEY_REQUEST_ID_GET_WEATHER) {
             jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
         }
+        memoryM()->Free(3, temperature, conditions, weather);
     }
     
 
@@ -192,7 +193,7 @@ int main(void) {
     mainForm = Form_New();
     Form_Initialize(mainForm, mainForm_Load, mainForm_Unload);
     Form_Show(mainForm);
-    mainForm_UpdateTime();
+    //mainForm_UpdateTime();
     jsCom_Initialize(mainForm_InboxReceivedCallback);
     Form_RegisterWatchFaceTimer(MINUTE_UNIT, mainForm_EveryMinuteTimer);
         
