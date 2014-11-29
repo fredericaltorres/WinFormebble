@@ -18,7 +18,9 @@
  */
 #include <pebble.h>
 
-//#define Form_TraceOn 1
+#define Trace_TraceDebugOn  1 // WinFormebble Trace Modes
+#define Form_TraceOn        1
+
 #include "WinFormebble.h"
     
 private int __WinFormebble__UniqueInt = 0;
@@ -28,7 +30,7 @@ private int __WinFormebble__GetNewUniqueInt() {
     __WinFormebble__UniqueInt += 1;
     return __WinFormebble__UniqueInt;
 }
-    
+   
     
 /*
  *  Watch Face Unique Timer
@@ -61,6 +63,7 @@ ControlInfo* ControlInfo_NewInstance(ControlTypeEnum controlType, void* control)
     i              = (ControlInfo*)malloc(sizeof(ControlInfo));
     i->ControlType = controlType;
     i->Control     = control;
+    i->Text        = NULL;
     return i;
 }
 Form Form_New() {
@@ -68,6 +71,7 @@ Form Form_New() {
     Form f = (Form)malloc(sizeof(FormStruct));
     f->_controlInfos = ControlInfo_New();
     f->WindowHandle  = window_create();
+    f->_graphicLayer = NULL; 
     
     // Set the current form this is a temporary hack
     // to retrieve all form as long as there are only 1
@@ -110,6 +114,9 @@ void Form_Destructor(Form form) {
     
     if(_WatchFaceTimer_Hanlder != NULL) {
         Form_UnregisterWatchFaceTimer();
+    }
+    if(form->_graphicLayer != NULL) {
+        layer_destroy(form->_graphicLayer);
     }
     free(form);
 }
@@ -156,6 +163,27 @@ bool Form_IsTimerEnabled(Timer timer) {
 
     return _AppTimer_On;
 }
+GRect Form_GetRectangle(Form form) {
+
+    return layer_get_bounds(window_get_root_layer(form->WindowHandle));
+}
+void Form_ReDraw(Form form) {
+
+    if(form->_graphicLayer != NULL) {
+        layer_mark_dirty(form->_graphicLayer);
+    }
+}
+void Form_InitializePaintEvent(Form form, LayerUpdateProc paintEvent) {
+
+    GRect r = Form_GetRectangle(form);
+
+    Form_Trace("Form_InitializePaintEvent %x GRect(%d,%d,%d,%d)", (unsigned int)form->WindowHandle, (int)r.origin.x, (int)r.origin.y, (int)r.size.w, (int)r.size.h);
+    
+    form->_graphicLayer = layer_create(r);
+    layer_set_update_proc(form->_graphicLayer, paintEvent);
+    layer_add_child(window_get_root_layer(form->WindowHandle), form->_graphicLayer);
+}
+
 
 /*
  * Font Methods
@@ -288,8 +316,17 @@ void Label_SetText(TextLayer * label, const char * text) {
     }
     else {
 
-        Form_Trace("Label_SetText %x, text:%s", (unsigned int)label, text);
-        c->Text = memoryM()->ReNewString((char*)text, c->Text);
+        if(c->Text != NULL && strlen(c->Text) >= strlen(text)) {
+
+            // Re use already allocated string
+            Form_Trace("Label_SetText %x, text:%s[%d >= %d]", (unsigned int)label, text, strlen(c->Text), strlen(text));
+            strcpy(c->Text, text);
+        }
+        else {
+            // Re alloc memory
+            Form_Trace("Label_SetText %x, text:%s", (unsigned int)label, text);
+            c->Text = memoryM()->ReNewString((char*)text, c->Text);
+        }
         text_layer_set_text(label, c->Text);
     }
 }
@@ -394,7 +431,7 @@ void Menu_Destructor(MenuLayer *menuLayer) {
             ControlInfo* c = ControlInfo_Get(array, i);
             if(ControlInfo_Get(array, i)->Control == control) {
 
-                Form_Trace("ControlInfo_GetByControl %x found", (unsigned int)control);
+                //Form_Trace("ControlInfo_GetByControl %x found", (unsigned int)control);
                 return c;
             }
         }

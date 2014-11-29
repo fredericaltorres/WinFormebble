@@ -4,11 +4,13 @@
  * (C) Torres Frederic 2014
  *
  * Display the following:
- * - Day in the week, 
- * - Month, 
- * - Day of the month
- * - Location based on MapQuest web service
- * - Temperature and weather condition based on web service openweathermap
+ * - Day, Month, DayOfMonth
+ * - Time hh:mm:ss
+ * - Current minute progress 
+ * - Info, display alternate
+ * -    Current weather
+ * -    Address
+ * -    City
  *
  * Use the library WinFormebble (https://github.com/fredericaltorres/WinFormebble)
  *
@@ -17,6 +19,9 @@
  */
 #include <pebble.h>  
 #include <pebble_fonts.h>
+
+#define Trace_TraceDebugOn  1 // WinFormebble Trace Modes
+#define Form_TraceOn        1
 #include "WinFormebble.h"
 
 // Api data returned from JavaScript World to C world
@@ -34,6 +39,7 @@
 // Data Refresh Rate
 #define WEATHER_REFRESH_RATE  50 // minutes    
 #define LOCATION_REFRESH_RATE 10 // minutes    
+#define SHOWINFO_REFRESH_RATE 3  // seconds
 
 // Strings and messages
 #define WATCH_DIGIT_BUFFER "00:00:00"
@@ -59,21 +65,22 @@ Form mainForm;
     Label lblTime;
     Label lblInfo;
     Label lblDate;
-
-    static char _currentHour[3];
-    static char * _street     = NULL;
-    static char * _address    = NULL;
-    static char * _conditions = NULL;
-    static int    _apiCount   = 0;
-    static int    _timerCount = 0;
-    static int   _lastMinute  = -1;
+    
+    char * _street          = NULL;
+    char * _address         = NULL;
+    char * _conditions      = NULL;
+    int    _currentHour     = -1;
+    int    _apiCount        = 0;
+    int    _timerCount      = 0;
+    int    _lastMinute      = -1;
+    int    _currentSecond   = 0;
+    bool   _javaScriptCommunicationOn = true;
 
     InfoType _infoType = InfoType_Min;
 
-
     private void mainForm_Load(Window *window) {
         
-        Trace_TraceDebug("-- mainForm_Load --");
+        Trace_TraceDebug("--- mainForm_Load --");
 
         lblDate = Label_New(GRect(0, 8, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_GOTHIC_24_BOLD);
         Form_AddLabel(mainForm, lblDate);
@@ -88,25 +95,49 @@ Form mainForm;
         Label_SetText(lblInfo, NOT_INITIALIZED);
         
     }
+    private void mainForm_Paint(Layer *layer, GContext *ctx) {
+
+        graphics_context_set_fill_color(ctx, GColorBlack);
+
+        int drawY      = 100;
+        int drawXStart = 12; // To center the line
+        int drawXLen   = 60*2;
+        int drawYLen   = 7;
+
+        //GRect r = GRect(drawXStart, drawY, drawXStart+drawXLen, drawY+drawYLen);
+        int border = 3;
+        graphics_draw_rect(ctx, GRect(drawXStart-border, drawY-border, drawXLen+border, drawYLen+border));
+        
+        GPoint start   = GPoint(drawXStart, drawY);
+        GPoint end     = GPoint(drawXStart, drawY);
+        end.x          = drawXStart+(_currentSecond * 2);
+
+        for(int i=0; i<4; i++) {
+            graphics_draw_line(ctx, start, end);
+            start.y += 1;
+            end.y   += 1;
+        }
+    }
     private void mainForm_Unload(Window *window) {
         
        Trace_TraceDebug("-- mainForm_Unload --"); 
-    }  
-    private void mainForm_UpdateTime(struct tm *now) {    
+    }
+    private void mainForm_UpdateAtMinute(struct tm *now) {    
 
         char * dateBuffer;
-        char * newHour;
-        
-        Trace_TraceDebug("-- mainForm_UpdateTime -- memoryM:[%d/%d]", memoryM()->GetCount(), memoryM()->GetMemoryUsed());
+        int newHour;
         
         // Vibrate at the beginning of each hour
-        newHour = memoryM()->FormatDateTime(now, "%H");
-        if(strcmp(_currentHour, newHour) != 0) {
-            strcpy(_currentHour, newHour);
+        newHour = now->tm_year;
+        if (newHour != _currentHour) {
+            _currentHour = newHour;
             vibes_short_pulse();
         }
+        // Set Day, Month, DayOfMonth
         Label_SetText(lblDate,  (dateBuffer  = memoryM()->FormatDateTime(now, "%a %b %d")));
         memoryM()->FreeMultiple(2, newHour, dateBuffer);
+
+        Trace_TraceDebug("-- mainForm_UpdateAtMinute -- memoryM:[%d/%d]", memoryM()->GetCount(), memoryM()->GetMemoryUsed());
     }
     /**
      * showInfo
@@ -134,32 +165,41 @@ Form mainForm;
     }
     private void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
         
-        mainForm_UpdateTime(tick_time);
+        mainForm_UpdateAtMinute(tick_time);
                 
-        if((_timerCount == 0) || (tick_time->tm_min % WEATHER_REFRESH_RATE == 0)) { // Get weather update every 50 minutes (and will also get the location)
-            
-            jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);
-        }
-        else if((_timerCount == 1) || (tick_time->tm_min % LOCATION_REFRESH_RATE == 0)) { // Get location every 12 minutes when we are not asking for weather
-            
-            jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
+        if(_javaScriptCommunicationOn) {
+
+            if((_timerCount == 0) || (tick_time->tm_min % WEATHER_REFRESH_RATE == 0)) { // Get weather update every 50 minutes (and will also get the location)
+                
+                jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);
+            }
+            else if((_timerCount == 1) || (tick_time->tm_min % LOCATION_REFRESH_RATE == 0)) { // Get location every 12 minutes when we are not asking for weather
+                
+                jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
+            }
         }
         _timerCount++;
     }
     private void mainForm_EverySecondTimer(struct tm *tick_time, TimeUnits units_changed) {
 
-        char * timeBuffer;
-        Label_SetText(lblTime,  (timeBuffer = memoryM()->FormatDateTime(tick_time, "%T")));
-        memoryM()->Free(timeBuffer);
+        _currentSecond = tick_time->tm_sec;
+
+        char * timeBuffer = memoryM()->FormatDateTime(tick_time, "%T");
+
+        Label_SetText(lblTime, timeBuffer);
+
+        memoryM()->Free(timeBuffer); 
 
         if(_lastMinute != tick_time->tm_min) {
 
             _lastMinute = tick_time->tm_min;
             mainForm_EveryMinuteTimer(tick_time, units_changed);
         }
-        if(tick_time->tm_sec % 3 == 0) {
+        if(tick_time->tm_sec % SHOWINFO_REFRESH_RATE == 0) {
             ShowInfo();
         }
+
+        Form_ReDraw(mainForm);
     }
     private int CelsiusToFahrenheit(int v) {
         
@@ -168,22 +208,21 @@ Form mainForm;
     } 
     private void mainForm_InboxReceivedCallback(DictionaryIterator *iterator, void *context) {
       
-        Trace_TraceDebug("-- mainForm_InboxReceivedCallback START"); 
-
-        char conditions [64];
-        memset(conditions, 0, sizeof(conditions));
+        char conditions[64];
+        //memset(conditions, 0, sizeof(conditions));
 
         int tempCelsius    = 0;
         int vibrate        = 0;
+        int requestId      = -1;
     
         Tuple * t = dict_read_first(iterator);
         while(t != NULL) {
 
-            Trace_TraceDebug("-- mainForm_InboxReceivedCallback Looping:%d", (int)t->key);
+            //Trace_TraceDebug("-- mainForm_InboxReceivedCallback Looping:%d", (int)t->key);
 
             switch(t->key) {
                 
-                case KEY_REQUEST_ID : /*requestId   = t->value->int32;*/                                    break;
+                case KEY_REQUEST_ID : requestId   = t->value->int32;                                        break;
                 case KEY_TEMPERATURE: tempCelsius = t->value->int32;                                        break;
                 case KEY_CONDITIONS : strcpy(conditions, t->value->cstring);                                break;
                 case KEY_LOCATION   : _address    = memoryM()->ReNewString(t->value->cstring, _address);    break;
@@ -195,7 +234,9 @@ Form mainForm;
             t = dict_read_next(iterator);
         }
 
-        if(strlen(conditions)) {
+        // For the weather we need 2 info temp and condition so we have to do the formating
+        // outside of the while lopp
+        if(requestId == KEY_REQUEST_ID_GET_WEATHER) {
 
             memoryM()->Free(_conditions);
             _conditions = memoryM()->Format("%dC, %dF - %s", tempCelsius, CelsiusToFahrenheit(tempCelsius), conditions);
@@ -216,12 +257,14 @@ int main(void) {
     mainForm = Form_New();
     Form_Initialize(mainForm, mainForm_Load, mainForm_Unload);
     Form_Show(mainForm);
-    //mainForm_UpdateTime();
+    
     jsCom_Initialize(mainForm_InboxReceivedCallback);
     Form_RegisterWatchFaceTimer(SECOND_UNIT, mainForm_EverySecondTimer);
+
+    Form_InitializePaintEvent(mainForm, mainForm_Paint);
         
     app_event_loop();
     
     Form_Destructor(mainForm);  // Also clean all associated controls    
-    memoryM()->FreeAll();
+    //memoryM()->FreeAll();
 }
