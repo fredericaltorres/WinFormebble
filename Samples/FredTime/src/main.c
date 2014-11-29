@@ -33,110 +33,133 @@
     
 // Data Refresh Rate
 #define WEATHER_REFRESH_RATE  50 // minutes    
-#define LOCATION_REFRESH_RATE 12 // minutes    
+#define LOCATION_REFRESH_RATE 10 // minutes    
 
 // Strings and messages
-#define WATCH_DIGIT_BUFFER "00:00"
+#define WATCH_DIGIT_BUFFER "00:00:00"
 #define NOT_INITIALIZED "..."
-#define LOADING "Loading..."
     
 #define DEFAULT_STRING_BUFFER_SIZE 16    
-    
+
+typedef enum {
+
+    InfoType_Street  = 0,
+    InfoType_Address = 1,
+    InfoType_Weather = 2,
+    InfoType_Dot     = 3,
+    InfoType_Ok      = 4,
+
+    InfoType_Max     = 5,
+    InfoType_Min     = 0
+
+} InfoType;
+
 Form mainForm;
 
     Label lblTime;
-    Label lblWeather;
+    Label lblInfo;
     Label lblDate;
-    Label lblMonth;
-    Label lblLocation;
 
     static char _currentHour[3];
-    static char _street[DEFAULT_STRING_BUFFER_SIZE];
-    static char _address[DEFAULT_STRING_BUFFER_SIZE];
-    static int _apiCount = 0;
-    static int _timerCount = 0;
+    static char * _street     = NULL;
+    static char * _address    = NULL;
+    static char * _conditions = NULL;
+    static int    _apiCount   = 0;
+    static int    _timerCount = 0;
+    static int   _lastMinute  = -1;
+
+    InfoType _infoType = InfoType_Min;
+
 
     private void mainForm_Load(Window *window) {
         
         Trace_TraceDebug("-- mainForm_Load --");
-        
-        strcpy(_street, NOT_INITIALIZED);
-        strcpy(_address, NOT_INITIALIZED);
-        
-        lblDate = Label_New(GRect(0, 8, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
+
+        lblDate = Label_New(GRect(0, 8, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_GOTHIC_24_BOLD);
         Form_AddLabel(mainForm, lblDate);
         Label_SetText(lblDate, NOT_INITIALIZED);
-        
-        lblMonth = Label_New(GRect(0, 33, 144, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Form_AddLabel(mainForm, lblMonth);
-        Label_SetText(lblMonth, NOT_INITIALIZED);
-        
-        lblTime = Label_New(GRect(5, 55, 139, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_BOLD_SUBSET_49);
+                
+        lblTime = Label_New(GRect(5, 55, 139, 50), WhiteBackground, GTextAlignmentCenter, FONT_KEY_GOTHIC_28_BOLD);
         Form_AddLabel(mainForm, lblTime);
         Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         
-        lblWeather = Label_New(GRect(0, 110, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Form_AddLabel(mainForm, lblWeather);
-        Label_SetText(lblWeather, LOADING);
+        lblInfo = Label_New(GRect(0, 110, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_GOTHIC_24_BOLD);
+        Form_AddLabel(mainForm, lblInfo);
+        Label_SetText(lblInfo, NOT_INITIALIZED);
         
-        lblLocation = Label_New(GRect(0, 134, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Form_AddLabel(mainForm, lblLocation);
-        Label_SetText(lblLocation, NOT_INITIALIZED);
     }
     private void mainForm_Unload(Window *window) {
         
        Trace_TraceDebug("-- mainForm_Unload --"); 
     }  
-    private void mainForm_UpdateTime() {    
+    private void mainForm_UpdateTime(struct tm *now) {    
 
-        char timeBuffer [DEFAULT_STRING_BUFFER_SIZE];
-        char dateBuffer [DEFAULT_STRING_BUFFER_SIZE];
-        char monthBuffer[DEFAULT_STRING_BUFFER_SIZE];
-        char newHour    [3];
+        char * dateBuffer;
+        char * newHour;
         
-        Trace_TraceDebug("-- mainForm_UpdateTime --");
-
-        struct tm * now = DateTime_Now();
+        Trace_TraceDebug("-- mainForm_UpdateTime -- memoryM:[%d/%d]", memoryM()->GetCount(), memoryM()->GetMemoryUsed());
         
         // Vibrate at the beginning of each hour
-        strcpy(newHour, StringFormatTime(now, "%H", newHour));
+        newHour = memoryM()->FormatDateTime(now, "%H");
         if(strcmp(_currentHour, newHour) != 0) {
             strcpy(_currentHour, newHour);
             vibes_short_pulse();
         }
-            
-        Label_SetText(lblTime,  StringFormatTime(now, clock_is_24h_style() ? "%H:%M" : "%I:%M", timeBuffer));
-        Label_SetText(lblDate,  StringFormatTime(now, "%A", dateBuffer));
-        Label_SetText(lblMonth, StringFormatTime(now, "%B %d", monthBuffer));
+        Label_SetText(lblDate,  (dateBuffer  = memoryM()->FormatDateTime(now, "%a %b %d")));
+        memoryM()->FreeMultiple(2, newHour, dateBuffer);
     }
     /**
-     * showAddress
-     * Display or the current street or city, state, country info
-     * is called every minute, by main timer
+     * showInfo
      */
-    private void showAddress() {
-        
-        if(_apiCount % 2 == 0) 
-            Label_SetText(lblLocation, _address);
-        else 
-            Label_SetText(lblLocation, _street);
-        _apiCount++;
+    private void ShowInfo() {
+
+        char * info = NULL;
+        static char * dotString = "...";
+        static char * oktring = "Ok?";
+
+        switch(_infoType) {
+            case InfoType_Street  : info = _street;     break;
+            case InfoType_Address : info = _address;    break;
+            case InfoType_Weather : info = _conditions; break;
+            case InfoType_Dot     : info = dotString;   break;
+            case InfoType_Ok      : info = oktring;   break;
+            case InfoType_Max     :  break; // Required by the compiler 
+        }
+        Label_SetText(lblInfo, info);
+
+        _infoType += 1;
+        if(_infoType == InfoType_Max) {
+            _infoType = InfoType_Min;
+        }
     }
     private void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
         
-        mainForm_UpdateTime();         
-        showAddress(); 
-        
+        mainForm_UpdateTime(tick_time);
+                
         if((_timerCount == 0) || (tick_time->tm_min % WEATHER_REFRESH_RATE == 0)) { // Get weather update every 50 minutes (and will also get the location)
             
             jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_WEATHER);
         }
-        else if((_timerCount == 0) || (tick_time->tm_min % LOCATION_REFRESH_RATE == 0)) { // Get location every 12 minutes when we are not asking for weather
+        else if((_timerCount == 1) || (tick_time->tm_min % LOCATION_REFRESH_RATE == 0)) { // Get location every 12 minutes when we are not asking for weather
             
             jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
         }
         _timerCount++;
-        Form_TraceMemoryReport();
+    }
+    private void mainForm_EverySecondTimer(struct tm *tick_time, TimeUnits units_changed) {
+
+        char * timeBuffer;
+        Label_SetText(lblTime,  (timeBuffer = memoryM()->FormatDateTime(tick_time, "%T")));
+        memoryM()->Free(timeBuffer);
+
+        if(_lastMinute != tick_time->tm_min) {
+
+            _lastMinute = tick_time->tm_min;
+            mainForm_EveryMinuteTimer(tick_time, units_changed);
+        }
+        if(tick_time->tm_sec % 3 == 0) {
+            ShowInfo();
+        }
     }
     private int CelsiusToFahrenheit(int v) {
         
@@ -145,42 +168,42 @@ Form mainForm;
     } 
     private void mainForm_InboxReceivedCallback(DictionaryIterator *iterator, void *context) {
       
-        char * temperature = memoryM()->NewStringX(DEFAULT_STRING_BUFFER_SIZE);
-        char * conditions  = memoryM()->NewStringX(DEFAULT_STRING_BUFFER_SIZE);
-        char * weather     = memoryM()->NewStringX(DEFAULT_STRING_BUFFER_SIZE);
-        int requestId      = -1;
+        Trace_TraceDebug("-- mainForm_InboxReceivedCallback START"); 
+
+        char conditions [64];
+        memset(conditions, 0, sizeof(conditions));
+
         int tempCelsius    = 0;
         int vibrate        = 0;
     
         Tuple * t = dict_read_first(iterator);
         while(t != NULL) {
-            
+
+            Trace_TraceDebug("-- mainForm_InboxReceivedCallback Looping:%d", (int)t->key);
+
             switch(t->key) {
                 
-                case KEY_REQUEST_ID : requestId = t->value->int32;                            break;
-                case KEY_TEMPERATURE: tempCelsius = t->value->int32;                          break;
-                case KEY_CONDITIONS : StringFormatString(t->value->cstring, "%s", conditions);break;
-                case KEY_LOCATION   : StringFormatString(t->value->cstring, "%s", _address);  break;
-                case KEY_STREET     : StringFormatString(t->value->cstring, "%s", _street);   break;
-                case KEY_VIBRATE    : vibrate = t->value->int32;                              break;
+                case KEY_REQUEST_ID : /*requestId   = t->value->int32;*/                                    break;
+                case KEY_TEMPERATURE: tempCelsius = t->value->int32;                                        break;
+                case KEY_CONDITIONS : strcpy(conditions, t->value->cstring);                                break;
+                case KEY_LOCATION   : _address    = memoryM()->ReNewString(t->value->cstring, _address);    break;
+                case KEY_STREET     : _street     = memoryM()->ReNewString(t->value->cstring, _street);     break;
+                case KEY_VIBRATE    : vibrate     = t->value->int32;                                        break;
+
                 default             : APP_LOG(APP_LOG_LEVEL_ERROR, "Key %d not recognized!", (int)t->key); break;
             }
             t = dict_read_next(iterator);
         }
-        
-        StringFormat(AsBuffer(weather), "%dC,%dF - %s", tempCelsius, CelsiusToFahrenheit(tempCelsius), conditions);
-        Label_SetText(lblWeather, weather);
-        showAddress();
-        
+
+        if(strlen(conditions)) {
+
+            memoryM()->Free(_conditions);
+            _conditions = memoryM()->Format("%dC, %dF - %s", tempCelsius, CelsiusToFahrenheit(tempCelsius), conditions);
+        }
+
         if(vibrate) { // Api requested to vibrate to notify something to the user
              vibes_short_pulse();
         }
-        
-        // If we just received the response for Get Weather, not initiate Get Location
-        if(requestId == KEY_REQUEST_ID_GET_WEATHER) {
-            jsCom_SendIntMessage(KEY_REQUEST_ID, KEY_REQUEST_ID_GET_LOCATION);
-        }
-        memoryM()->Free(3, temperature, conditions, weather);
     }
     
 
@@ -195,10 +218,10 @@ int main(void) {
     Form_Show(mainForm);
     //mainForm_UpdateTime();
     jsCom_Initialize(mainForm_InboxReceivedCallback);
-    Form_RegisterWatchFaceTimer(MINUTE_UNIT, mainForm_EveryMinuteTimer);
+    Form_RegisterWatchFaceTimer(SECOND_UNIT, mainForm_EverySecondTimer);
         
     app_event_loop();
     
-    memoryM()->FreeAll();
     Form_Destructor(mainForm);  // Also clean all associated controls    
+    memoryM()->FreeAll();
 }

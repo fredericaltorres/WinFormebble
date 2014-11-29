@@ -101,7 +101,7 @@ void Form_Destructor(Form form) {
         ControlInfo *ci = ControlInfo_Get(form->_controlInfos, i);
         if(ci->ControlType == CONTROL_TYPE_LABEL) {
 
-            memoryM()->FreeAllocation(ci->Text); // Free text associated with label
+            memoryM()->Free(ci->Text); // Free text associated with label
             Label_Destructor((TextLayer*)ci->Control); // Free label
         }
     }
@@ -272,15 +272,23 @@ TextLayer * Label_New(GRect frame, BackGroundColorType backGroundType, GTextAlig
  @text the text to set. Note that the text buffer must remain allocated. It must be a static
  */
 void Label_SetText(TextLayer * label, const char * text) {
-    
-    Form_Trace("Label_SetText %x, text:%s", (unsigned int)label, text);
-    // Make a copy of the string and set the label
-    // The copy of the string is allocated by memoryM() and store in ControlInfo.Text
+
     ControlInfo* c = ControlInfo_GetByControl(Form_Current->_controlInfos, (void*)label);
     if(c == NULL) {
         text_layer_set_text(label, "issue");
+        return;
+    }
+
+    if(text == NULL) {
+
+        Form_Trace("Label_SetText %x, text:NULL", (unsigned int)label);
+        text_layer_set_text(label, "");
+        memoryM()->Free(c->Text);
+        c->Text = NULL;
     }
     else {
+
+        Form_Trace("Label_SetText %x, text:%s", (unsigned int)label, text);
         c->Text = memoryM()->ReNewString((char*)text, c->Text);
         text_layer_set_text(label, c->Text);
     }

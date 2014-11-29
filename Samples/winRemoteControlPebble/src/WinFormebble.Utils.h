@@ -31,8 +31,8 @@ char *__StringFormatString(char * value, char * format, char * buffer, int buffe
  * Datetime Method
  */
 
-struct tm * DateTime_Now();
-struct tm * DateTime(int Year, int Month, int Day, int Hour, int Minutes, int Seconds);
+//struct tm * DateTime_Now();
+//struct tm * DateTime(int Year, int Month, int Day, int Hour, int Minutes, int Seconds);
 time_t DateTime_ToTimeT(struct tm * dateTime);
 int DateTime_Diff(char unit, struct tm * dateTime1, struct tm * dateTime2);
 
@@ -97,13 +97,8 @@ LOCALDB localDB();
 
 
 /* ============== MemoryM ================== */
+
 /*
-    Allow to access the local storage on the PEBBLE Watch.
-    Offer an OO syntax
-    http://developer.getpebble.com/guides/pebble-apps/app-structure/persistent-storage/
-*/
- 
- /*
 MemoryM
 A Simple memory manager for C.
 
@@ -128,8 +123,7 @@ WinFormebble (https://github.com/fredericaltorres/WinFormebble)
 
 #endif
 
-#define MEMORYM_MAX_FORMATED_TEMP_STRING_SIZE 1024
-#define MEMORYM_MAX_REPORT_SIZE (MEMORYM_MAX_FORMATED_TEMP_STRING_SIZE*4)
+#define MEMORYM_MAX_REPORT_SIZE 1024
 #define MEMORYM_TRUE "true"
 #define MEMORYM_FALSE "false"
 #define MEMORYM_STACK_CONTEXT_SIZE 4
@@ -142,21 +136,20 @@ WinFormebble (https://github.com/fredericaltorres/WinFormebble)
     // First implement a dynamic array to store all allocation
     typedef struct {
 
-	    int size;
-	    void * data;
+        int size;
+        void * data;
     } MemoryAllocation;
 
-    DArray*				MemoryAllocation_New       ();
-    void				MemoryAllocation_PushA     (DArray *array, MemoryAllocation *s);
-    void				MemoryAllocation_Push      (DArray *array, int size, void *data);
-    MemoryAllocation*	MemoryAllocation_Pop       (DArray *array);
-    MemoryAllocation*	MemoryAllocation_Get       (DArray *array, int index);
+    DArray*             MemoryAllocation_New       ();
+    void                MemoryAllocation_PushA     (DArray *array, MemoryAllocation *s);
+    void                MemoryAllocation_Push      (DArray *array, int size, void *data);
+    MemoryAllocation*   MemoryAllocation_Pop       (DArray *array);
+    MemoryAllocation*   MemoryAllocation_Get       (DArray *array, int index);
     void                MemoryAllocation_Set       (DArray *array, int index, MemoryAllocation *s);
     void                MemoryAllocation_Destructor(DArray *array);
     int                 MemoryAllocation_GetLength (DArray *array);
 
     void MemoryAllocation_FreeAllocation(MemoryAllocation *a);
-
 
     typedef struct {
 
@@ -164,30 +157,57 @@ WinFormebble (https://github.com/fredericaltorres/WinFormebble)
         int _contextStack[MEMORYM_STACK_CONTEXT_SIZE];
         int _contextStackIndex;
 
-        bool*(*NewBool       )();
-        int *(*NewInt        )();
-        char*(*NewStringX    )(int size);
-        char*(*NewString     )(char* s);
-        char*(*ReNewString   )(char* s, char* previousAllocation);
-        char*(*Format        )(char* s, ...);
-        char*(*GetReport     )();
-        int  (*GetMemoryUsed )();
-        void (*FreeAll       )();
-        int  (*GetCount      )();
-        bool (*FreeAllocation)(void* data);
-        int  (*Free)(int n, ...);
+        // Allocate a new boolean
+        bool*(*NewBool)();
+        // Allocate a new int
+        int *(*NewInt)();
+        // Allocate a new string for len size (do not add the extra char for the \0)
+        char*(*NewStringLen)(int size);
+        // Allocate a new string identical to the string passed
+        char*(*NewString)(char* s);
+        // Re allocate a new string identical to the string passed, but re use the internal MemoryAllocation object
+        char*(*ReNewString)(char* s, char* previousAllocation);
+        // Concat the string s to the string previousAllocation already managed by MemoryM 
+        char*(*StringConcat)(char* s, char* previousAllocation);
         
+        // Allocate a new DateTime set to now
+        struct tm *(*NewDate)();
+        // Allocate a new DateTime set to now
+        struct tm *(*ReNewDate)(struct tm * previousAllocation);
+        // Allocate a new DateTime set to a specific date
+        struct tm *(*NewDateTime)(int year, int month, int day, int hour, int minutes, int seconds);
+
+        // Format using sprintf, but return a string allocated by MemoryM
+        char*(*Format)(char* s, ...);
+        // Format the Date using strftime(), but return a string allocated by MemoryM
+        char*(*FormatDateTime)(struct tm *date, char* format);
+        // Re allocate and re format the Date using strftime(), but re use the internal MemoryAllocation object
+        char*(*ReFormatDateTime)(struct tm *date, char* format, char * previousAllocation);
+
+        // Free a specific allocation
+        bool(*Free)(void* data);
+        // Free multiple specific allocation
+        int(*FreeMultiple)(int n, ...);
+
+        // Return a string allocated by MemoryM, presenting the current memory allocation
+        char*(*GetReport)();
+        // Return how many total byte are allocated
+        int  (*GetMemoryUsed)();
+        // Free all
+        void (*FreeAll)();
+        // Return the total number of allocation created
+        int  (*GetCount)();
+        
+        // Mark the state of the memory manager
         bool(*PushContext)();
+        // Restore the state of the memory manager to the previous Push
         bool(*PopContext)();
 
         bool(*UnitTests)();
 
     } MemoryManager;
 
-    MemoryManager* memoryM(); // Function that return the instance
-
-
-    ///char* __format(char *format, ...);
-
+    // Function that return the sigleton instance
+    MemoryManager* memoryM(); 
 
     #endif
