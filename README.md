@@ -41,15 +41,21 @@ Form  Form_New();
 void  Form_Initialize(Form form, WindowHandler load, WindowHandler unload);
 void  Form_Show(Form form);
 void  Form_Destructor(Form form);
+
 void  Form_AddLabel(Form form, TextLayer * label);
 void  Form_RegisterButtonHandlers(Form form, ClickHandler selectClickHandler, 
                                   ClickHandler upClickHandler, ClickHandler downClickHandler);
+
 Timer Form_StartTimer(Form form, uint32_t timeout_ms, AppTimerCallback callback);
 Timer Form_StopTimer(Timer timer);
 Timer Form_ResumeTimer(Timer timer);
 bool  Form_IsTimerEnabled(Timer timer);
 void  Form_RegisterWatchFaceTimer(TimeUnits tick_units, TickHandler handler);
 void  Form_UnregisterWatchFaceTimer();
+
+GRect Form_GetRectangle(Form form);
+void  Form_SetPaintEvent(Form form, LayerUpdateProc paintEvent);
+void  Form_ReDraw(Form form);
 
 // Font -----------------------------------------------------------
 

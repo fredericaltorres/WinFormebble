@@ -93,8 +93,8 @@ Timer Form_StopTimer(Timer timer);
 Timer Form_ResumeTimer(Timer timer);
 bool  Form_IsTimerEnabled(Timer timer);
 GRect Form_GetRectangle(Form form);
-void Form_InitializePaintEvent(Form form, LayerUpdateProc paintEvent);
-void Form_ReDraw(Form form);
+void  Form_SetPaintEvent(Form form, LayerUpdateProc paintEvent);
+void  Form_ReDraw(Form form);
 
 // Font -----------------------------------------------------------
 

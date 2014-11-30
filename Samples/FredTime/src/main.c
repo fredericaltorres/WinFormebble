@@ -21,7 +21,7 @@
 #include <pebble_fonts.h>
 
 #define Trace_TraceDebugOn  1 // WinFormebble Trace Modes
-#define Form_TraceOn        1
+//#define Form_TraceOn        1
 #include "WinFormebble.h"
 
 // Api data returned from JavaScript World to C world
@@ -54,8 +54,10 @@ typedef enum {
     InfoType_Weather = 2,
     InfoType_Dot     = 3,
     InfoType_Ok      = 4,
+    InfoType_WatchColor = 5,
+    InfoType_FirmwareVersion = 6,
 
-    InfoType_Max     = 5,
+    InfoType_Max     = 7,
     InfoType_Min     = 0
 
 } InfoType;
@@ -66,14 +68,14 @@ Form mainForm;
     Label lblInfo;
     Label lblDate;
     
-    char * _street          = NULL;
-    char * _address         = NULL;
-    char * _conditions      = NULL;
-    int    _currentHour     = -1;
-    int    _apiCount        = 0;
-    int    _timerCount      = 0;
-    int    _lastMinute      = -1;
-    int    _currentSecond   = 0;
+    char * _street                    = NULL;
+    char * _address                   = NULL;
+    char * _conditions                = NULL;
+    int    _currentHour               = -1;
+    int    _apiCount                  = 0;
+    int    _timerCount                = 0;
+    int    _lastMinute                = -1;
+    int    _currentSecond             = 0;
     bool   _javaScriptCommunicationOn = true;
 
     InfoType _infoType = InfoType_Min;
@@ -122,39 +124,31 @@ Form mainForm;
         
        Trace_TraceDebug("-- mainForm_Unload --"); 
     }
-    private void mainForm_UpdateAtMinute(struct tm *now) {    
-
-        char * dateBuffer;
-        int newHour;
-        
-        // Vibrate at the beginning of each hour
-        newHour = now->tm_year;
-        if (newHour != _currentHour) {
-            _currentHour = newHour;
-            vibes_short_pulse();
-        }
-        // Set Day, Month, DayOfMonth
-        Label_SetText(lblDate,  (dateBuffer  = memoryM()->FormatDateTime(now, "%a %b %d")));
-        memoryM()->FreeMultiple(2, newHour, dateBuffer);
-
-        Trace_TraceDebug("-- mainForm_UpdateAtMinute -- memoryM:[%d/%d]", memoryM()->GetCount(), memoryM()->GetMemoryUsed());
-    }
-    /**
-     * showInfo
-     */
+   
     private void ShowInfo() {
 
-        char * info = NULL;
-        static char * dotString = "...";
-        static char * oktring = "Ok?";
+        char* firmware              = NULL;
+        char* watchColor            = NULL;
+        char * info                 = NULL;
+        static char * dotString     = "...";
+        static char * oktring       = "Ok?";
 
         switch(_infoType) {
-            case InfoType_Street  : info = _street;     break;
-            case InfoType_Address : info = _address;    break;
-            case InfoType_Weather : info = _conditions; break;
-            case InfoType_Dot     : info = dotString;   break;
-            case InfoType_Ok      : info = oktring;   break;
-            case InfoType_Max     :  break; // Required by the compiler 
+
+            case InfoType_Street     : info = _street;     break;
+            case InfoType_Address    : info = _address;    break;
+            case InfoType_Weather    : info = _conditions; break;
+            case InfoType_Dot        : info = dotString;   break;
+            case InfoType_Ok         : info = oktring;     break;
+            case InfoType_WatchColor :
+                watchColor = watch()->GetColor();
+                info       = memoryM()->Format("%s watch", watchColor);
+            break;
+            case InfoType_FirmwareVersion:
+                firmware   = watch()->GetFirmwareVersion();
+                info       = memoryM()->Format("%s Firmware", firmware);
+            break;
+            case InfoType_Max        : break; // Required by the compiler 
         }
         Label_SetText(lblInfo, info);
 
@@ -162,10 +156,23 @@ Form mainForm;
         if(_infoType == InfoType_Max) {
             _infoType = InfoType_Min;
         }
+        if((watchColor != NULL)||(firmware != NULL)) { // Clean if we allocated some string to display the watch color
+            memoryM()->FreeMultiple(3, watchColor, firmware, info);
+        }
     }
     private void mainForm_EveryMinuteTimer(struct tm *tick_time, TimeUnits units_changed) {
         
-        mainForm_UpdateAtMinute(tick_time);
+        char * dateBuffer;
+        
+        // Vibrate at the beginning of each hour
+        if (tick_time->tm_year != _currentHour) {
+            _currentHour = tick_time->tm_year;
+            vibes_short_pulse();
+        }
+        // Set Day, Month, DayOfMonth
+        Label_SetText(lblDate, (dateBuffer  = memoryM()->FormatDateTime(tick_time, "%a %b %d")));
+        memoryM()->Free(dateBuffer);
+        Trace_TraceDebug("-- mainForm_EveryMinuteTimer -- memoryM:[%d/%d]", memoryM()->GetCount(), memoryM()->GetMemoryUsed());
                 
         if(_javaScriptCommunicationOn) {
 
@@ -184,7 +191,7 @@ Form mainForm;
 
         _currentSecond = tick_time->tm_sec;
 
-        char * timeBuffer = memoryM()->FormatDateTime(tick_time, "%T");
+        char * timeBuffer = memoryM()->FormatDateTime(tick_time, "%H:%M:%S");
 
         Label_SetText(lblTime, timeBuffer);
 
@@ -196,10 +203,9 @@ Form mainForm;
             mainForm_EveryMinuteTimer(tick_time, units_changed);
         }
         if(tick_time->tm_sec % SHOWINFO_REFRESH_RATE == 0) {
+
             ShowInfo();
         }
-
-        Form_ReDraw(mainForm);
     }
     private int CelsiusToFahrenheit(int v) {
         
@@ -261,7 +267,9 @@ int main(void) {
     jsCom_Initialize(mainForm_InboxReceivedCallback);
     Form_RegisterWatchFaceTimer(SECOND_UNIT, mainForm_EverySecondTimer);
 
-    Form_InitializePaintEvent(mainForm, mainForm_Paint);
+    // The paint event is automatically call on the watchface timer
+    // No need to call Form_ReDraw()
+    Form_SetPaintEvent(mainForm, mainForm_Paint);
         
     app_event_loop();
     

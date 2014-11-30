@@ -1,0 +1,23 @@
+
+MemoryAllocation * MemoryAllocation_NewInstance() {
+
+    return (MemoryAllocation*)malloc(sizeof(MemoryAllocation));
+}
+
+MemoryAllocation* __getFirstFreeMemoryAllocation();
+
+void MemoryAllocation_Push(DArray *array, int size, void *data) {
+
+    MemoryAllocation* ma = __getFirstFreeMemoryAllocation();
+
+    if (ma == NULL) { // We need a new allocation
+        ma       = MemoryAllocation_NewInstance();
+        ma->data = data;
+        ma->size = size;
+        MemoryAllocation_PushA(array, ma);
+    }
+    else {
+        ma->data = data;
+        ma->size = size;
+    }
+}

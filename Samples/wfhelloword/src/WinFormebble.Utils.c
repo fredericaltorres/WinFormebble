@@ -434,6 +434,56 @@ LOCALDB localDB() {
 	return &__localDbInstance;
 }
 
+
+
+/* ============== Watch Singleton ================== */
+
+WATCH_CLASS __localWatchInstance; // Singleton instance
+
+
+
+char* WATCH__getFirmwareVersion() {
+
+    WatchInfoVersion v = watch_info_get_firmware_version();
+    return memoryM()->Format("%d.%d.%d", v.major, v.minor, v.patch);
+}
+char* WATCH__getColor() {
+
+    char color [20] = "Unknown";
+
+    WatchInfoColor c = watch_info_get_color();
+
+    switch(c) {
+
+      case WATCH_INFO_COLOR_UNKNOWN         : break;
+      case WATCH_INFO_COLOR_BLACK           : strcpy(color, "Black"); break;
+      case WATCH_INFO_COLOR_WHITE           : strcpy(color, "White"); break;
+      case WATCH_INFO_COLOR_RED             : strcpy(color, "Red"); break;
+      case WATCH_INFO_COLOR_ORANGE          : strcpy(color, "Orange"); break;
+      case WATCH_INFO_COLOR_GREY            : strcpy(color, "Grey"); break;
+      case WATCH_INFO_COLOR_STAINLESS_STEEL : strcpy(color, "StainLess Steel"); break;
+      case WATCH_INFO_COLOR_MATTE_BLACK     : strcpy(color, "Matte Black"); break;
+      case WATCH_INFO_COLOR_BLUE            : strcpy(color, "Blue"); break;
+      case WATCH_INFO_COLOR_GREEN           : strcpy(color, "Green"); break;
+      case WATCH_INFO_COLOR_PINK            : strcpy(color, "Ping"); break;
+    }
+    return memoryM()->NewString(color);
+}
+
+WATCH watch() {
+
+  if (__localWatchInstance.GetColor == NULL) {
+
+    __localWatchInstance.GetColor           = WATCH__getColor;
+    __localWatchInstance.GetFirmwareVersion = WATCH__getFirmwareVersion;
+  }
+  return &__localWatchInstance;
+}
+
+
+
+
+
 /* ============== memoryH Singleton ================== */
 
 /*
@@ -502,6 +552,13 @@ void                MemoryAllocation_Set(DArray *array, int index, MemoryAllocat
 void                MemoryAllocation_Destructor(DArray *array)                          { darray_free(array); }
 int                 MemoryAllocation_GetLength(DArray *array)                           { return array->last; }
 
+
+
+MemoryAllocation * MemoryAllocation_NewInstance() {
+
+    return (MemoryAllocation*)malloc(sizeof(MemoryAllocation));
+}
+
 void MemoryAllocation_FreeAllocation(MemoryAllocation *a) {  
 
     if (a->data != NULL) {
@@ -514,14 +571,18 @@ MemoryAllocation* __getFirstFreeMemoryAllocation();
 
 void MemoryAllocation_Push(DArray *array, int size, void *data) {
 
-    MemoryAllocation* ma  = __getFirstFreeMemoryAllocation();
+    MemoryAllocation* ma = __getFirstFreeMemoryAllocation();
 
-    if (ma == NULL) {
-        ma = (MemoryAllocation*)malloc(sizeof(MemoryAllocation));
+    if (ma == NULL) { // We need a new allocation
+        ma       = MemoryAllocation_NewInstance();
+        ma->data = data;
+        ma->size = size;
+        MemoryAllocation_PushA(array, ma);
     }
-    ma->data             = data;
-    ma->size             = size;
-    MemoryAllocation_PushA(array, ma);
+    else {
+        ma->data = data;
+        ma->size = size;
+    }
 }
 
 // *** Single instance allocated *** 

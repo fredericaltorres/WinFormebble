@@ -102,6 +102,23 @@ typedef struct  {
 LOCALDB localDB();
 
 
+/* ============== Watch Singleton ================== */
+/*
+http://developer.getpebble.com/docs/c/group___watch_info.html#struct_watch_info_version  
+*/
+     
+typedef struct  {
+    
+    char*(*GetColor)();
+    char*(*GetFirmwareVersion)();    
+
+} WATCH_CLASS;
+
+#define WATCH WATCH_CLASS*
+    
+WATCH watch();
+
+
 /* ============== MemoryM ================== */
 
 /*

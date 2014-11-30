@@ -18,8 +18,8 @@
  */
 #include <pebble.h>
 
-#define Trace_TraceDebugOn  1 // WinFormebble Trace Modes
-#define Form_TraceOn        1
+//#define Trace_TraceDebugOn  1 // WinFormebble Trace Modes
+//#define Form_TraceOn        1
 
 #include "WinFormebble.h"
     
@@ -173,7 +173,7 @@ void Form_ReDraw(Form form) {
         layer_mark_dirty(form->_graphicLayer);
     }
 }
-void Form_InitializePaintEvent(Form form, LayerUpdateProc paintEvent) {
+void Form_SetPaintEvent(Form form, LayerUpdateProc paintEvent) {
 
     GRect r = Form_GetRectangle(form);
 

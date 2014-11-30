@@ -14,6 +14,8 @@
     
 // Util Defines
 
+
+/// REMOVE THIS 
 #define StringFormat snprintf
 #define AsBuffer(buffer) buffer, sizeof(buffer)
 //snprintf(weather_layer_buffer, sizeof(weather_layer_buffer), "(%s, %s)", temperature_buffer, conditions_buffer);        
@@ -55,9 +57,11 @@ long int p_strtol(const char *nptr, char **endptr, int base);
 */
 
 typedef struct {
+
 	void **data;
 	int last;
 	int size;
+
 } DArray;
 
 #define PDArray DArray*
@@ -79,7 +83,9 @@ DArray* darray_radix_sort(DArray *array);
     Offer an OO syntax
     http://developer.getpebble.com/guides/pebble-apps/app-structure/persistent-storage/
 */
+    
 typedef struct  {
+
 	void(*SetBool)  (int key, bool val);
 	void(*SetInt)   (int key, int val);
 	void(*SetString)(int key, char* val);
@@ -88,12 +94,29 @@ typedef struct  {
 	bool (*GetBool)  (int key);
 	int  (*GetInt)   (int key);
 	char*(*GetString)(int key, char* buffer, int maxBuffer);    
+
 } LOCALDB_CLASS;
 
 #define LOCALDB LOCALDB_CLASS*
     
 LOCALDB localDB();
 
+
+/* ============== Watch Singleton ================== */
+/*
+http://developer.getpebble.com/docs/c/group___watch_info.html#struct_watch_info_version  
+*/
+     
+typedef struct  {
+    
+    char*(*GetColor)();
+    char*(*GetFirmwareVersion)();    
+
+} WATCH_CLASS;
+
+#define WATCH WATCH_CLASS*
+    
+WATCH watch();
 
 
 /* ============== MemoryM ================== */
