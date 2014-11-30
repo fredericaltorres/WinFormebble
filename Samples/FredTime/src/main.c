@@ -224,7 +224,8 @@ Form mainForm;
         Tuple * t = dict_read_first(iterator);
         while(t != NULL) {
 
-            //Trace_TraceDebug("-- mainForm_InboxReceivedCallback Looping:%d", (int)t->key);
+            // GET DETAIL WEATHER DESCRIPTION
+            // CREATE 2 ENTRY WEATHER TEMP and WEATHER CONDITION
 
             switch(t->key) {
                 
@@ -274,5 +275,5 @@ int main(void) {
     app_event_loop();
     
     Form_Destructor(mainForm);  // Also clean all associated controls    
-    //memoryM()->FreeAll();
+    memoryM()->FreeAll();
 }
