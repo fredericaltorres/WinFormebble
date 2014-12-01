@@ -151,10 +151,10 @@ Form mainForm;
     
     private void _timer_Tick(void * data)  {
         
-        struct tm * now   = memoryM()->NewDate();
-        char * timeFormat = memoryM()->FormatDateTime(now, "%H:%M:%S");
+        struct tm * now   = memoryMt()->NewDate();
+        char * timeFormat = memoryMt()->FormatDateTime(now, "%H:%M:%S");
         Label_SetText(lblTime, timeFormat);
-        memoryM()->FreeMultiple(2, timeFormat, now);
+        memoryM()->FreeTracked();
     }
     private void mainForm_Load(Window *window) {
         

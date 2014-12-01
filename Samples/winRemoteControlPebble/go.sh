@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# . ~/.bash_profile
+#. ~/.bash_profile
 echo Compile Application FredTime
 echo ----------------------------
 reset

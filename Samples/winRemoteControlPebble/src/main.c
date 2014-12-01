@@ -20,7 +20,7 @@
     #define KEY_REQUEST_ID_OK = 3
     #define KEY_REQUEST_ID_GET_IP = 4    
 #define KEY_COMPUTER_IP 1 // Also use as the id for the Pebble local storage property
-    
+       
 // Data Refresh Rate
 #define DEFAULT_STRING_BUFFER_SIZE 16    
 
@@ -102,15 +102,17 @@ Form mainForm;
     }  
     private void mainForm_UpdateTime() {    
         
-        struct tm *tick_time   = DateTime_Now();
+        struct tm *tick_time   = memoryM()->NewDate();
         static char timeBuffer [DEFAULT_STRING_BUFFER_SIZE];
         Label_SetText(lblTime,  StringFormatTime(tick_time, "%T", timeBuffer));
+        memoryM()->Free(tick_time);
     }
     private void mainForm_Timer(struct tm *tick_time, TimeUnits units_changed) {
         
         mainForm_UpdateTime();                 
     }
     private void  mainForm_InboxReceivedCallback(DictionaryIterator *iterator, void *context) {
+
         static char pageCounterBuffer [DEFAULT_STRING_BUFFER_SIZE];
         Tuple * t = dict_read_first(iterator);
         while(t != NULL) {
@@ -131,15 +133,18 @@ Form mainForm;
     }
   
 int main(void) { 
-    
+
     mainForm = Form_New();
     Form_Initialize(mainForm, mainForm_Load, mainForm_Unload);
-    Form_Show(mainForm);
+
     mainForm_UpdateTime();
     jsCom_Initialize(mainForm_InboxReceivedCallback);
     Form_RegisterWatchFaceTimer(SECOND_UNIT, mainForm_Timer);    
+
+    Form_Show(mainForm);
         
     app_event_loop();
     
-    Form_Destructor(mainForm);  // Also clean all associated controls
+    Form_Destructor(mainForm);  // Also clean all associated controls    
+    memoryM()->FreeAll();
 }
