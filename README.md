@@ -154,7 +154,7 @@ Form mainForm;
         struct tm * now   = memoryM()->NewDate();
         char * timeFormat = memoryM()->FormatDateTime(now, "%H:%M:%S");
         Label_SetText(lblTime, timeFormat);
-        memoryM()->Free(timeFormat);
+        memoryM()->FreeMultiple(2, timeFormat, now);
     }
     private void mainForm_Load(Window *window) {
         
@@ -204,7 +204,7 @@ Form mainForm;
         struct tm * now   = memoryM()->NewDate();
         char * timeFormat = memoryM()->FormatDateTime(now, "%H:%M:%S");
         Label_SetText(lblTime, timeFormat);
-        memoryM()->Free(timeFormat);
+        memoryM()->FreeMultiple(2, timeFormat, now);
     }
     private char * StopStartTimer() {
         
