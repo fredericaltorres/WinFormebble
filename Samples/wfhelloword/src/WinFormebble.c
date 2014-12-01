@@ -18,8 +18,8 @@
  */
 #include <pebble.h>
 
-//#define Trace_TraceDebugOn  1 // WinFormebble Trace Modes
-//#define Form_TraceOn        1
+#define Trace_TraceDebugOn  1 // WinFormebble Trace Modes
+#define Form_TraceOn        1
 
 #include "WinFormebble.h"
     

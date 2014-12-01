@@ -116,19 +116,21 @@ Form mainForm;
     private void mainForm_Load(Window *window) {
         
         lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Label_SetText(lblMsg, "Hello World");
         Form_AddLabel(mainForm, lblMsg);
+        Label_SetText(lblMsg, "Hello World");
     }
     private void mainForm_Unload(Window *window) {
         
     }
 
 int main(void) { 
+ 
     mainForm = Form_New();
     Form_Initialize(mainForm, mainForm_Load, mainForm_Unload);
     Form_Show(mainForm);
     app_event_loop();
-    Form_Destructor(mainForm);  // Also clean all associated controls
+    Form_Destructor(mainForm);  // Also clean all associated controls    
+    memoryM()->FreeAll();
 }
 ```
 
@@ -142,43 +144,44 @@ int main(void) {
 #define WATCH_DIGIT_BUFFER "00:00:00"    
     
 Form mainForm;
-
+    
     Label lblMsg;
     Label lblTime;
     Timer _timer = NULL;
     
     private void _timer_Tick(void * data)  {
         
-        static char timeBuffer [8+1];
-        struct tm *tick_time = DateTime_Now();
-        
-        // Format %T HH:MM:SS
-        Label_SetText(lblTime, StringFormatTime(tick_time, "%T", timeBuffer));
+        struct tm * now   = memoryM()->NewDate();
+        char * timeFormat = memoryM()->FormatDateTime(now, "%H:%M:%S");
+        Label_SetText(lblTime, timeFormat);
+        memoryM()->Free(timeFormat);
     }
     private void mainForm_Load(Window *window) {
         
         lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Label_SetText(lblMsg, "Hello World");
         Form_AddLabel(mainForm, lblMsg);
+        Label_SetText(lblMsg, "Hello World");
                
         lblTime = Label_New(GRect(0, 60, 139, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         Form_AddLabel(mainForm, lblTime);
+        Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         
         _timer = Form_StartTimer(mainForm, 1000, _timer_Tick);
     }
     private void mainForm_Unload(Window *window) {
         
     }
-  
 
 int main(void) { 
+ 
     mainForm = Form_New();
     Form_Initialize(mainForm, mainForm_Load, mainForm_Unload);
     Form_Show(mainForm);
     app_event_loop();
-    Form_Destructor(mainForm);  // Also clean all associated controls
+    Form_Destructor(mainForm);  // Also clean all associated controls    
+    memoryM()->FreeAll();
 }
+*/
 ```
 
 
@@ -191,18 +194,17 @@ int main(void) {
 #define WATCH_DIGIT_BUFFER "00:00:00"    
     
 Form mainForm;
-
+    
     Label lblMsg;
     Label lblTime;
     Timer _timer = NULL;
     
     private void _timer_Tick(void * data)  {
         
-        static char timeBuffer [8+1];
-        struct tm *tick_time = DateTime_Now();
-        
-        // Format %T HH:MM:SS
-        Label_SetText(lblTime, StringFormatTime(tick_time, "%T", timeBuffer));
+        struct tm * now   = memoryM()->NewDate();
+        char * timeFormat = memoryM()->FormatDateTime(now, "%H:%M:%S");
+        Label_SetText(lblTime, timeFormat);
+        memoryM()->Free(timeFormat);
     }
     private char * StopStartTimer() {
         
@@ -226,12 +228,12 @@ Form mainForm;
     private void mainForm_Load(Window *window) {
         
         lblMsg = Label_New(GRect(0, 20, 144, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Label_SetText(lblMsg, "Hello World");
         Form_AddLabel(mainForm, lblMsg);
+        Label_SetText(lblMsg, "Hello World");
                
         lblTime = Label_New(GRect(0, 60, 139, 25), WhiteBackground, GTextAlignmentCenter, FONT_KEY_ROBOTO_CONDENSED_21);
-        Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         Form_AddLabel(mainForm, lblTime);
+        Label_SetText(lblTime, WATCH_DIGIT_BUFFER);
         
         Form_RegisterButtonHandlers(mainForm, NULL, butUp_Click, butDown_Click);
         _timer = Form_StartTimer(mainForm, 1000, _timer_Tick);
@@ -239,13 +241,15 @@ Form mainForm;
     private void mainForm_Unload(Window *window) {
         
     }
-  
 
 int main(void) { 
+ 
     mainForm = Form_New();
     Form_Initialize(mainForm, mainForm_Load, mainForm_Unload);
     Form_Show(mainForm);
     app_event_loop();
-    Form_Destructor(mainForm);  // Also clean all associated controls
+    Form_Destructor(mainForm);  // Also clean all associated controls    
+    memoryM()->FreeAll();
 }
+
 ```
